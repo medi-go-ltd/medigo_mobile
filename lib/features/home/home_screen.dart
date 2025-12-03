@@ -280,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildMetricCard(
             label: 'Earnings Today',
-            value: '\$125',
+            value: '£125',
             icon: Icons.attach_money,
           ),
         ),

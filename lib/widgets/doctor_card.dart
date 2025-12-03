@@ -98,7 +98,7 @@ class DoctorCard extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              'Fee: \$${doctor.fee.toInt()}',
+                              'Fee: £${doctor.fee.toInt()}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
