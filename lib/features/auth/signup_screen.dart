@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/utils/validation_utils.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
+import 'package:medigo_mobile/widgets/app_text_field.dart';
+import 'package:medigo_mobile/widgets/password_field.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key, required this.role});
@@ -14,19 +17,31 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _extraFieldController = TextEditingController();
 
-  bool _isPasswordVisible = false;
+  final _firstNameFocusNode = FocusNode();
+  final _lastNameFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _extraFieldFocusNode = FocusNode();
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _extraFieldController.dispose();
+    _firstNameFocusNode.dispose();
+    _lastNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _extraFieldFocusNode.dispose();
     super.dispose();
   }
 
@@ -52,7 +67,7 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(),
+                const AppHeader(),
                 const SizedBox(height: 32),
                 const Text(
                   'Register',
@@ -71,91 +86,140 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 32),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildInputField(
-                        controller: _nameController,
-                        label: 'Full Name',
-                        hintText: 'Full Name',
-                        icon: Icons.person_outline,
-                        keyboardType: TextInputType.name,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildInputField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hintText: 'Email',
-                        icon: Icons.mail_outline,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildInputField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hintText: 'Password',
-                        icon: Icons.lock_outline,
-                        obscureText: !_isPasswordVisible,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildInputField(
-                        controller: _extraFieldController,
-                        label: extraFieldLabel,
-                        hintText: extraFieldLabel,
-                        icon: widget.role == UserRole.doctor
-                            ? Icons.badge_outlined
-                            : Icons.lock_outline,
-                        obscureText: widget.role == UserRole.patient,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Handle signup action
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.surface,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          textStyle: AppTypography.button,
-                        ),
-                        child: const Text('Sign Up'),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Already have an account? ',
-                            style: AppTypography.body,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text(
-                              'Log In',
-                              style: AppTypography.link,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppTextField(
+                                controller: _firstNameController,
+                                focusNode: _firstNameFocusNode,
+                                label: 'First Name',
+                                hintText: 'First Name',
+                                icon: Icons.person_outline,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.next,
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(
+                                    context,
+                                  ).requestFocus(_lastNameFocusNode);
+                                },
+                                validator: ValidationUtils.validateFirstName,
+                              ),
                             ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: AppTextField(
+                                controller: _lastNameController,
+                                focusNode: _lastNameFocusNode,
+                                label: 'Last Name',
+                                hintText: 'Last Name',
+                                icon: Icons.person_outline,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.next,
+                                onFieldSubmitted: (_) {
+                                  FocusScope.of(
+                                    context,
+                                  ).requestFocus(_emailFocusNode);
+                                },
+                                validator: ValidationUtils.validateLastName,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextField(
+                          controller: _emailController,
+                          focusNode: _emailFocusNode,
+                          label: 'Email',
+                          hintText: 'Email',
+                          icon: Icons.mail_outline,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(_passwordFocusNode);
+                          },
+                          validator: ValidationUtils.validateEmail,
+                        ),
+                        const SizedBox(height: 16),
+                        PasswordField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocusNode,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(_extraFieldFocusNode);
+                          },
+                          validator: ValidationUtils.validatePassword,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextField(
+                          controller: _extraFieldController,
+                          focusNode: _extraFieldFocusNode,
+                          label: extraFieldLabel,
+                          hintText: extraFieldLabel,
+                          icon: widget.role == UserRole.doctor
+                              ? Icons.badge_outlined
+                              : Icons.lock_outline,
+                          keyboardType: widget.role == UserRole.doctor
+                              ? TextInputType.text
+                              : TextInputType.visiblePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) {
+                            FocusScope.of(context).unfocus();
+                            _handleSignup();
+                          },
+                          obscureText: widget.role == UserRole.patient,
+                          validator: widget.role == UserRole.doctor
+                              ? ValidationUtils
+                                    .validateMedicalRegistrationNumber
+                              : (value) =>
+                                    ValidationUtils.validateConfirmPassword(
+                                      value,
+                                      _passwordController.text,
+                                    ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: _handleSignup,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.surface,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            textStyle: AppTypography.button,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                          child: const Text('Sign Up'),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account? ',
+                              style: AppTypography.body,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text(
+                                'Log In',
+                                style: AppTypography.link,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -166,53 +230,9 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return const AppHeader();
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-    Widget? suffixIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTypography.bodySecondary),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: AppTypography.bodySecondary,
-            prefixIcon: Icon(icon, color: AppColors.textSecondary),
-            suffixIcon: suffixIcon,
-            filled: true,
-            fillColor: AppColors.surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.4),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.4),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: const BorderSide(
-                color: AppColors.primary,
-                width: 1.6,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  void _handleSignup() {
+    if (_formKey.currentState?.validate() ?? false) {
+      // TODO: Handle signup action
+    }
   }
 }

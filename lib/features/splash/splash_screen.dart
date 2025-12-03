@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback? onFinished;
@@ -69,9 +71,21 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    Future.delayed(const Duration(milliseconds: 2000), () async {
+      if (!mounted) return;
+
+      final authViewModel = context.read<AuthViewModel>();
+      while (authViewModel.isLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+      }
+
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
+        if (authViewModel.isAuthenticated) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        } else {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
+        }
       }
     });
   }
@@ -149,11 +163,17 @@ class _SplashScreenState extends State<SplashScreen>
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    widget.logoAsset,
-                    width: 160,
-                    height: 160,
-                    fit: BoxFit.contain,
+                  ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF4DA8BC),
+                      BlendMode.srcIn,
+                    ),
+                    child: Image.asset(
+                      widget.logoAsset,
+                      width: 160,
+                      height: 160,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(

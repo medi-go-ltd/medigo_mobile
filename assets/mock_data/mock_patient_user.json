@@ -1,0 +1,17 @@
+{
+  "user": {
+    "id": "patient-123",
+    "email": "rebecca.anderson@example.com",
+    "firstName": "Rebecca",
+    "lastName": "Anderson",
+    "phoneNumber": "+1234567890",
+    "role": "patient",
+    "profileImageUrl": null,
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC9.patient.token",
+    "createdAt": "2024-01-01T00:00:00Z",
+    "updatedAt": "2024-01-01T00:00:00Z"
+  },
+  "message": "Login successful",
+  "success": true
+}
+

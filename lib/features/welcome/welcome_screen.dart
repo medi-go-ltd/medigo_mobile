@@ -83,11 +83,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Widget _buildLogo() {
-    return Image.asset(
-      'assets/images/app-logo.png',
-      width: 170,
-      height: 170,
-      fit: BoxFit.contain,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: ColorFiltered(
+        colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+        child: Image.asset(
+          'assets/images/app-logo.png',
+          width: 100,
+          height: 100,
+          fit: BoxFit.contain,
+        ),
+      ),
     );
   }
 

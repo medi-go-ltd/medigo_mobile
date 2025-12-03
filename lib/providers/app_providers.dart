@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
+import 'package:medigo_mobile/view_models/login_view_model.dart';
+import 'package:medigo_mobile/view_models/patient_home_view_model.dart';
+
+class AppProviders {
+  static List<ChangeNotifierProvider> get providers => [
+    ChangeNotifierProvider<AuthViewModel>(create: (_) => AuthViewModel()),
+    ChangeNotifierProvider<LoginViewModel>(
+      create: (context) =>
+          LoginViewModel(authViewModel: context.read<AuthViewModel>()),
+    ),
+    ChangeNotifierProvider<PatientHomeViewModel>(
+      create: (_) => PatientHomeViewModel(),
+    ),
+  ];
+
+  static Widget wrapWithProviders({required Widget child}) {
+    return MultiProvider(providers: providers, child: child);
+  }
+}

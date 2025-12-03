@@ -23,7 +23,17 @@ class AppHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/images/app-logo.png', width: 70, height: 70),
+              ColorFiltered(
+                colorFilter: const ColorFilter.mode(
+                  AppColors.primary,
+                  BlendMode.srcIn,
+                ),
+                child: Image.asset(
+                  'assets/images/app-logo.png',
+                  width: 70,
+                  height: 70,
+                ),
+              ),
               Text(
                 'MediGo',
                 style: AppTypography.pageTitle.copyWith(

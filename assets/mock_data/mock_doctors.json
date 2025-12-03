@@ -1,0 +1,131 @@
+[
+  {
+    "id": "doc-001",
+    "firstName": "Sarah",
+    "lastName": "Johnson",
+    "specialty": "Pediatrics",
+    "fee": 120,
+    "profileImageUrl": null,
+    "rating": 4.8,
+    "reviewCount": 234,
+    "location": {
+      "latitude": 51.44405766002234,
+      "longitude": 0.20730996025344275,
+      "address": "Dartford Medical Practice, 65-67 Lowfield Street, Dartford, DA1 1HP"
+    },
+    "estimatedTime": 12
+  },
+  {
+    "id": "doc-002",
+    "firstName": "Jahnet",
+    "lastName": "Makanjuola",
+    "specialty": "Cardiology",
+    "fee": 150,
+    "profileImageUrl": null,
+    "rating": 4.9,
+    "reviewCount": 189,
+    "location": {
+      "latitude": 51.42516468969272,
+      "longitude": 0.28674040697526576,
+      "address": "Bean Village Surgery, 4 Southfleet Rd, Bean, Dartford DA2 8AR"
+    },
+    "estimatedTime": 8
+  },
+  {
+    "id": "doc-003",
+    "firstName": "Emily",
+    "lastName": "Rodriguez",
+    "specialty": "Dermatology",
+    "fee": 130,
+    "profileImageUrl": null,
+    "rating": 4.7,
+    "reviewCount": 156,
+    "location": {
+      "latitude": 51.44658679953272,
+      "longitude": 0.26353369163199586,
+      "address": "Elmdene Surgery, 273 London Rd, Stone, Greenhithe DA9 9DB"
+    },
+    "estimatedTime": 15
+  },
+  {
+    "id": "doc-004",
+    "firstName": "David",
+    "lastName": "Kim",
+    "specialty": "Orthopedics",
+    "fee": 140,
+    "profileImageUrl": null,
+    "rating": 4.6,
+    "reviewCount": 201,
+    "location": {
+      "latitude": 51.44204648297748,
+      "longitude": 0.31197242553980364,
+      "address": "Swanscombe Health Centre, Southfleet Rd, Swanscombe DA10 0BF"
+    },
+    "estimatedTime": 10
+  },
+  {
+    "id": "doc-005",
+    "firstName": "James",
+    "lastName": "Wilson",
+    "specialty": "General Practice",
+    "fee": 100,
+    "profileImageUrl": null,
+    "rating": 4.5,
+    "reviewCount": 178,
+    "location": {
+      "latitude": 51.436025803876355,
+      "longitude": 0.3406620021396617,
+      "address": "Fleet Health Campus, Vale Rd, Northfleet, Gravesend DA11 8BZ"
+    },
+    "estimatedTime": 6
+  },
+  {
+    "id": "doc-006",
+    "firstName": "Amina",
+    "lastName": "Adeyemi",
+    "specialty": "Orthopedics",
+    "fee": 110,
+    "profileImageUrl": null,
+    "rating": 4.7,
+    "reviewCount": 203,
+    "location": {
+      "latitude": 51.443965614102524,
+      "longitude": 0.37004030120681247,
+      "address": "Gravesend Medical Centre, 1 New Swan Yard, Gravesend, Kent, DA12 2EN"
+    },
+    "estimatedTime": 14
+  },
+  {
+    "id": "doc-007",
+    "firstName": "Michael",
+    "lastName": "Chen",
+    "specialty": "General Practice",
+    "fee": 200,
+    "profileImageUrl": null,
+    "rating": 4.8,
+    "reviewCount": 200,
+    "location": {
+      "latitude": 51.441493772619665,
+      "longitude": 0.23663937682613342,
+      "address": "Pilgrims Way Surgery, Pilgrims Way, Dartford DA1 1QY"
+    },
+    "estimatedTime": 6
+  },
+  {
+    "id": "doc-008",
+    "firstName": "Kene",
+    "lastName": "Udeh",
+    "specialty": "Dentistry",
+    "fee": 100,
+    "profileImageUrl": null,
+    "rating": 4.8,
+    "reviewCount": 200,
+    "location": {
+      "latitude": 51.44955223029815,
+      "longitude": 0.2799107228559753,
+      "address": "Ivy Bower Surgery, 7 Ivy Bower Cl, Greenhithe DA9 9NF"
+    },
+    "estimatedTime": 6
+  }
+]
+

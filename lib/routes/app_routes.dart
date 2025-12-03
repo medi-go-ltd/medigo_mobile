@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/features/auth/signup_screen.dart';
+import 'package:medigo_mobile/features/home/home_screen.dart';
+import 'package:medigo_mobile/features/home/patient_home_screen.dart';
 import 'package:medigo_mobile/features/splash/splash_screen.dart';
 import 'package:medigo_mobile/features/welcome/welcome_screen.dart';
 import 'package:medigo_mobile/models/user_role.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
 
 class AppRoutes {
   static const String splash = '/';
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String home = '/home';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -35,6 +40,22 @@ class AppRoutes {
         final role = args?.role ?? UserRole.patient;
         return MaterialPageRoute(
           builder: (_) => SignupScreen(role: role),
+          settings: settings,
+        );
+      case home:
+        return MaterialPageRoute(
+          builder: (context) {
+            final authViewModel = Provider.of<AuthViewModel>(
+              context,
+              listen: false,
+            );
+            final user = authViewModel.user;
+            if (user?.role == UserRole.patient) {
+              return const PatientHomeScreen();
+            } else {
+              return const HomeScreen();
+            }
+          },
           settings: settings,
         );
       default:

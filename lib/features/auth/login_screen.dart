@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/view_models/login_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -129,18 +131,58 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                         const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.surface,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            textStyle: AppTypography.button,
-                          ),
-                          child: const Text('Login'),
+                        Consumer<LoginViewModel>(
+                          builder: (context, viewModel, child) {
+                            return ElevatedButton(
+                              onPressed: viewModel.isLoading
+                                  ? null
+                                  : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.surface,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                textStyle: AppTypography.button,
+                                disabledBackgroundColor: AppColors.primary
+                                    .withValues(alpha: 0.6),
+                              ),
+                              child: viewModel.isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              AppColors.surface,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text('Login'),
+                            );
+                          },
+                        ),
+                        Consumer<LoginViewModel>(
+                          builder: (context, viewModel, child) {
+                            if (viewModel.hasError) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Text(
+                                  viewModel.errorMessage ?? 'An error occurred',
+                                  style: AppTypography.bodySecondary.copyWith(
+                                    color: Colors.red,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                         const SizedBox(height: 16),
                         TextButton(
@@ -253,14 +295,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Form is valid, proceed with login
-      // TODO: Handle login action
-      // Example usage:
-      // final email = _emailController.text.trim();
-      // final password = _passwordController.text;
-      // authService.login(email, password, widget.role);
+      final viewModel = context.read<LoginViewModel>();
+
+      final success = await viewModel.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        role: widget.role,
+      );
+
+      if (success && mounted) {
+        // Navigate to home screen after successful login
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      }
     }
   }
 
