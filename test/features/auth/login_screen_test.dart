@@ -2,16 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/models/user_role.dart';
+import 'package:medigo_mobile/providers/app_providers.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  Widget buildTestWidget(Widget home) {
+    return AppProviders.wrapWithProviders(
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: home,
+      ),
+    );
+  }
+
   group('LoginScreen Tests', () {
     testWidgets('displays login form for doctor', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -23,10 +35,7 @@ void main() {
 
     testWidgets('displays login form for patient', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.patient),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.patient)),
       );
       await tester.pumpAndSettle();
 
@@ -38,10 +47,7 @@ void main() {
 
     testWidgets('displays back button', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -50,10 +56,7 @@ void main() {
 
     testWidgets('toggles password visibility', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -73,10 +76,7 @@ void main() {
 
     testWidgets('displays sign up link', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -85,10 +85,7 @@ void main() {
 
     testWidgets('displays remember me checkbox', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -103,10 +100,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 
@@ -128,10 +122,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          home: const LoginScreen(role: UserRole.doctor),
-        ),
+        buildTestWidget(const LoginScreen(role: UserRole.doctor)),
       );
       await tester.pumpAndSettle();
 

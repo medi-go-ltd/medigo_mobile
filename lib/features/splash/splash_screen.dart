@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
 
@@ -29,6 +32,10 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _ring2Scale;
   late final Animation<double> _ring1Opacity;
   late final Animation<double> _ring2Opacity;
+
+  Timer? _ring1StartTimer;
+  Timer? _ring2StartTimer;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -59,19 +66,19 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _ring2Controller, curve: Curves.easeInOut),
     );
 
-    Future.delayed(const Duration(milliseconds: 200), () {
+    _ring1StartTimer = Timer(const Duration(milliseconds: 200), () {
       if (mounted) {
         _ring1Controller.repeat(reverse: true);
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    _ring2StartTimer = Timer(const Duration(milliseconds: 800), () {
       if (mounted) {
         _ring2Controller.repeat(reverse: true);
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 2000), () async {
+    _navigationTimer = Timer(const Duration(milliseconds: 2000), () async {
       if (!mounted) return;
 
       final authViewModel = context.read<AuthViewModel>();
@@ -82,7 +89,16 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (mounted) {
         if (authViewModel.isAuthenticated) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          final user = authViewModel.user;
+          if (user != null &&
+              user.role == UserRole.doctor &&
+              !user.isVerified) {
+            Navigator.of(context).pushReplacementNamed(
+              AppRoutes.verificationPending,
+            );
+          } else {
+            Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          }
         } else {
           Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
         }
@@ -92,6 +108,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _ring1StartTimer?.cancel();
+    _ring2StartTimer?.cancel();
+    _navigationTimer?.cancel();
     _ring1Controller.dispose();
     _ring2Controller.dispose();
     super.dispose();

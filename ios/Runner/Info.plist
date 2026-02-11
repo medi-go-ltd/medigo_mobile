@@ -45,6 +45,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to capture photos of your ID and certificates.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to upload your ID and qualification documents.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to find nearby doctors and calculate distances.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

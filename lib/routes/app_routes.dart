@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:medigo_mobile/features/auth/doctor_signup_screen.dart';
 import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/features/auth/signup_screen.dart';
+import 'package:medigo_mobile/features/auth/verification_pending_screen.dart';
 import 'package:medigo_mobile/features/home/home_screen.dart';
 import 'package:medigo_mobile/features/home/patient_home_screen.dart';
 import 'package:medigo_mobile/features/splash/splash_screen.dart';
@@ -14,6 +16,8 @@ class AppRoutes {
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String doctorSignup = '/doctor-signup';
+  static const String verificationPending = '/verification-pending';
   static const String home = '/home';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -38,8 +42,24 @@ class AppRoutes {
       case signup:
         final args = settings.arguments as SignupArguments?;
         final role = args?.role ?? UserRole.patient;
+        if (role == UserRole.doctor) {
+          return MaterialPageRoute(
+            builder: (_) => const DoctorSignupScreen(),
+            settings: settings,
+          );
+        }
         return MaterialPageRoute(
           builder: (_) => SignupScreen(role: role),
+          settings: settings,
+        );
+      case doctorSignup:
+        return MaterialPageRoute(
+          builder: (_) => const DoctorSignupScreen(),
+          settings: settings,
+        );
+      case verificationPending:
+        return MaterialPageRoute(
+          builder: (_) => const VerificationPendingScreen(),
           settings: settings,
         );
       case home:
@@ -50,11 +70,15 @@ class AppRoutes {
               listen: false,
             );
             final user = authViewModel.user;
+            if (user != null &&
+                user.role == UserRole.doctor &&
+                !user.isVerified) {
+              return const VerificationPendingScreen();
+            }
             if (user?.role == UserRole.patient) {
               return const PatientHomeScreen();
-            } else {
-              return const HomeScreen();
             }
+            return const HomeScreen();
           },
           settings: settings,
         );

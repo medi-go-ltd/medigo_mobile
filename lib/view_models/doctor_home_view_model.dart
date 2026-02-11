@@ -1,0 +1,147 @@
+import 'package:flutter/material.dart';
+import 'package:medigo_mobile/models/booking.dart';
+import 'package:medigo_mobile/models/booking_request.dart';
+import 'package:medigo_mobile/models/doctor_profile.dart';
+import 'package:medigo_mobile/models/payment_transaction.dart';
+
+class DoctorHomeViewModel extends ChangeNotifier {
+  double _radiusKm = 15;
+  bool _isOnline = true;
+
+  DoctorProfile _profile = DoctorProfile(
+    firstName: 'James',
+    lastName: 'Smith',
+    email: 'james.smith@example.com',
+    phoneNumber: '+44 7123 456789',
+    address: '10 Medical Centre, London',
+    consultationFee: 75,
+    callOutFee: 25,
+    radiusKm: 15,
+  );
+
+  final List<Booking> _activeBookings = [];
+  final List<Booking> _pastBookings = [
+    Booking(
+      id: 'b-1',
+      patientName: 'Sarah Mitchell',
+      patientLocation: '5 Elm Road, London',
+      reasonForVisit: 'General check-up',
+      earnings: 75,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      status: BookingStatus.completed,
+    ),
+    Booking(
+      id: 'b-2',
+      patientName: 'Robert Clarke',
+      patientLocation: '12 Park Lane, London',
+      reasonForVisit: 'Follow-up consultation',
+      earnings: 100,
+      date: DateTime.now().subtract(const Duration(days: 5)),
+      status: BookingStatus.completed,
+    ),
+  ];
+  final List<PaymentTransaction> _paymentHistory = [
+    PaymentTransaction(
+      id: 'tx-1',
+      patientName: 'Sarah Mitchell',
+      amount: 75,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      description: 'Consultation',
+    ),
+    PaymentTransaction(
+      id: 'tx-2',
+      patientName: 'Robert Clarke',
+      amount: 100,
+      date: DateTime.now().subtract(const Duration(days: 5)),
+      description: 'Consultation + Call-out',
+    ),
+  ];
+
+  final List<BookingRequest> _liveRequests = [
+    BookingRequest(
+      id: 'req-1',
+      patientName: 'Emma Wilson',
+      patientLocation: '23 Oak Street, London SW4 2PX',
+      reasonForVisit: 'Headache and fever – urgent consultation requested',
+      estimatedEarnings: 85.00,
+      requestedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+    ),
+    BookingRequest(
+      id: 'req-2',
+      patientName: 'Michael Brown',
+      patientLocation: '15 Maple Avenue, London SE1 8AB',
+      reasonForVisit: 'Follow-up check for previous respiratory issue',
+      estimatedEarnings: 75.00,
+      requestedAt: DateTime.now().subtract(const Duration(minutes: 12)),
+    ),
+  ];
+
+  double get radiusKm => _radiusKm;
+  bool get isOnline => _isOnline;
+  DoctorProfile get profile => _profile;
+  List<BookingRequest> get liveRequests => List.unmodifiable(_liveRequests);
+  List<Booking> get activeBookings => List.unmodifiable(_activeBookings);
+  List<Booking> get pastBookings => List.unmodifiable(_pastBookings);
+  List<PaymentTransaction> get paymentHistory => List.unmodifiable(_paymentHistory);
+
+  double get totalEarnings => _paymentHistory.fold(0, (sum, t) => sum + t.amount);
+
+  void setRadius(double km) {
+    _radiusKm = km;
+    _profile = _profile.copyWith(radiusKm: km);
+    notifyListeners();
+  }
+
+  void setOnline(bool value) {
+    _isOnline = value;
+    notifyListeners();
+  }
+
+  void acceptBooking(String id) {
+    final req = _liveRequests.firstWhere((r) => r.id == id);
+    _liveRequests.removeWhere((r) => r.id == id);
+    _activeBookings.add(Booking(
+      id: req.id,
+      patientName: req.patientName,
+      patientLocation: req.patientLocation,
+      reasonForVisit: req.reasonForVisit,
+      earnings: req.estimatedEarnings,
+      date: req.requestedAt,
+      status: BookingStatus.active,
+    ));
+    notifyListeners();
+  }
+
+  void declineBooking(String id) {
+    _liveRequests.removeWhere((r) => r.id == id);
+    notifyListeners();
+  }
+
+  void completeBooking(String id) {
+    final b = _activeBookings.firstWhere((x) => x.id == id);
+    _activeBookings.removeWhere((x) => x.id == id);
+    _pastBookings.insert(0, Booking(
+      id: b.id,
+      patientName: b.patientName,
+      patientLocation: b.patientLocation,
+      reasonForVisit: b.reasonForVisit,
+      earnings: b.earnings,
+      date: DateTime.now(),
+      status: BookingStatus.completed,
+    ));
+    _paymentHistory.insert(0, PaymentTransaction(
+      id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
+      patientName: b.patientName,
+      amount: b.earnings,
+      date: DateTime.now(),
+      description: 'Consultation',
+    ));
+    notifyListeners();
+  }
+
+  void updateProfile(DoctorProfile profile) {
+    _profile = profile;
+    _radiusKm = profile.radiusKm;
+    notifyListeners();
+  }
+}
