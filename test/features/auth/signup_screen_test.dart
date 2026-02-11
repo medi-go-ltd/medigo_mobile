@@ -19,7 +19,7 @@ void main() {
 
       expect(find.text('Create a Doctor account'), findsOneWidget);
       expect(find.text('Medical Registration Number'), findsNWidgets(2));
-      expect(find.byType(TextField), findsNWidgets(4));
+      expect(find.byType(TextField), findsNWidgets(5));
     });
 
     testWidgets('displays registration form for patient', (
@@ -35,7 +35,7 @@ void main() {
 
       expect(find.text('Create a Patient account'), findsOneWidget);
       expect(find.text('Confirm Password'), findsNWidgets(2));
-      expect(find.byType(TextField), findsNWidgets(4));
+      expect(find.byType(TextField), findsNWidgets(5));
     });
 
     testWidgets('displays back button', (WidgetTester tester) async {
@@ -60,11 +60,11 @@ void main() {
       await tester.pumpAndSettle();
 
       final passwordFields = find.byType(TextField);
-      expect(passwordFields, findsNWidgets(4));
+      expect(passwordFields, findsNWidgets(5));
 
       final passwordField = tester
           .widgetList<TextField>(passwordFields)
-          .elementAt(2);
+          .elementAt(3);
       expect(passwordField.obscureText, isTrue);
 
       final visibilityButton = find.byIcon(Icons.visibility_outlined);

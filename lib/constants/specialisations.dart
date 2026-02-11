@@ -1,0 +1,23 @@
+/// Common medical specialisations for doctor registration
+const List<String> kDoctorSpecialisations = [
+  'General Medicine',
+  'General Practice',
+  'Internal Medicine',
+  'Emergency Medicine',
+  'Paediatrics',
+  'Dermatology',
+  'Cardiology',
+  'Orthopaedics',
+  'Psychiatry',
+  'Neurology',
+  'Obstetrics & Gynaecology',
+  'Ophthalmology',
+  'ENT',
+  'Rheumatology',
+  'Endocrinology',
+  'Gastroenterology',
+  'Pulmonology',
+  'Urology',
+  'Anaesthetics',
+  'Other',
+];

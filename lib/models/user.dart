@@ -1,4 +1,5 @@
 import 'package:medigo_mobile/models/user_role.dart';
+import 'package:medigo_mobile/models/verification_status.dart';
 
 class User {
   final String id;
@@ -11,6 +12,7 @@ class User {
   final String? token;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final VerificationStatus verificationStatus;
 
   User({
     required this.id,
@@ -23,6 +25,7 @@ class User {
     this.token,
     this.createdAt,
     this.updatedAt,
+    this.verificationStatus = VerificationStatus.pending,
   });
 
   String get fullName => '$firstName $lastName';
@@ -52,8 +55,14 @@ class User {
           : json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
+      verificationStatus: VerificationStatus.parse(
+        json['verificationStatus'] as String? ??
+            json['verification_status'] as String?,
+      ),
     );
   }
+
+  bool get isVerified => verificationStatus == VerificationStatus.approved;
 
   Map<String, dynamic> toJson() {
     return {
@@ -67,6 +76,7 @@ class User {
       'token': token,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'verificationStatus': verificationStatus.name,
     };
   }
 
@@ -93,6 +103,7 @@ class User {
     String? token,
     DateTime? createdAt,
     DateTime? updatedAt,
+    VerificationStatus? verificationStatus,
   }) {
     return User(
       id: id ?? this.id,
@@ -105,6 +116,7 @@ class User {
       token: token ?? this.token,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
     );
   }
 }

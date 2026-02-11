@@ -105,7 +105,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final bool isActive = _selectedRole == role;
     final String assetPath = role == UserRole.doctor
         ? 'assets/images/doctor.png'
-        : 'assets/images/patient.png';
+        : 'assets/images/image.png';
 
     return InkWell(
       onTap: () => _onRoleSelected(role, onTap),

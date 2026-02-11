@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medigo_mobile/features/welcome/welcome_screen.dart';
 import 'package:medigo_mobile/features/auth/login_screen.dart';
+import 'package:medigo_mobile/providers/app_providers.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  Widget buildTestWidget(Widget home) {
+    return AppProviders.wrapWithProviders(
+      child: MaterialApp(
+        theme: AppTheme.light,
+        onGenerateRoute: AppRoutes.onGenerateRoute,
+        home: home,
+      ),
+    );
+  }
+
   group('WelcomeScreen Tests', () {
     testWidgets('displays all required elements', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          onGenerateRoute: AppRoutes.onGenerateRoute,
-          home: const WelcomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
       expect(find.text('Medi Go'), findsOneWidget);
@@ -24,9 +34,7 @@ void main() {
     });
 
     testWidgets('displays app logo', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(theme: AppTheme.light, home: const WelcomeScreen()),
-      );
+      await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
       expect(find.byType(Image), findsWidgets);
@@ -35,13 +43,7 @@ void main() {
     testWidgets('navigates to login screen when doctor button is tapped', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          onGenerateRoute: AppRoutes.onGenerateRoute,
-          home: const WelcomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
       final doctorButton = find.text('Sign in as Doctor');
@@ -56,13 +58,7 @@ void main() {
     testWidgets('navigates to login screen when patient button is tapped', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          onGenerateRoute: AppRoutes.onGenerateRoute,
-          home: const WelcomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
       final patientButton = find.text('Sign in as Patient');
@@ -75,13 +71,7 @@ void main() {
     });
 
     testWidgets('highlights button when selected', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.light,
-          onGenerateRoute: AppRoutes.onGenerateRoute,
-          home: const WelcomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
       final doctorButton = find.text('Sign in as Doctor');

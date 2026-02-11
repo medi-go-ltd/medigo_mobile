@@ -98,4 +98,70 @@ class ValidationUtils {
 
     return null;
   }
+
+  static String? validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Phone number is required';
+    }
+    final phoneRegex = RegExp(r'^[\d\s\+\-\(\)]{10,20}$');
+    if (!phoneRegex.hasMatch(value.trim())) {
+      return 'Please enter a valid phone number';
+    }
+    return null;
+  }
+
+  static String? validateAddress(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Home address is required';
+    }
+    if (value.trim().length < 10) {
+      return 'Please enter a complete address';
+    }
+    return null;
+  }
+
+  static String? validateGmcNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'GMC number is required';
+    }
+    final digitsOnly = value.trim().replaceAll(RegExp(r'\s'), '');
+    final gmcRegex = RegExp(r'^[0-9]{5,8}$');
+    if (!gmcRegex.hasMatch(digitsOnly)) {
+      return 'Please enter a valid GMC number (5-8 digits)';
+    }
+    return null;
+  }
+
+  static String? validateFee(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Fee is required';
+    }
+    final fee = double.tryParse(value.trim());
+    if (fee == null || fee < 0) {
+      return 'Please enter a valid amount';
+    }
+    return null;
+  }
+
+  static String? validateRadius(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Radius is required';
+    }
+    final radius = double.tryParse(value.trim());
+    if (radius == null || radius < 1 || radius > 100) {
+      return 'Please enter a radius between 1 and 100 km';
+    }
+    return null;
+  }
+
+  static String? validateYearsOfExperience(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Years of experience is required';
+    }
+    final years = int.tryParse(value.trim());
+    if (years == null || years < 0 || years > 60) {
+      return 'Please enter a valid number (0-60)';
+    }
+    return null;
+  }
 }
