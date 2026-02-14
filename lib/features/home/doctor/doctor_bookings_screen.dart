@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/features/home/doctor_patient_chat_screen.dart';
-import 'package:medigo_mobile/features/home/doctor_profile_screen.dart';
+import 'package:medigo_mobile/features/home/doctor/doctor_patient_chat_screen.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/utils/map_launcher.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
+import 'package:medigo_mobile/widgets/app_bar_gradient_divider.dart';
 import 'package:medigo_mobile/widgets/booking_card.dart';
 import 'package:medigo_mobile/widgets/booking_request_card.dart';
+import 'package:medigo_mobile/widgets/doctor_screen_app_bar.dart';
+import 'package:medigo_mobile/widgets/empty_state_widget.dart';
 import 'package:provider/provider.dart';
 
 class DoctorBookingsScreen extends StatefulWidget {
@@ -35,48 +37,33 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        titleSpacing: 24,
-        title: const Text(
-          'Bookings',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+      appBar: DoctorScreenAppBar(
+        title: 'Bookings',
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48 + 1.5),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _tabController,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                indicatorColor: AppColors.primary,
+                tabs: const [
+                  Tab(text: 'Live'),
+                  Tab(text: 'Active'),
+                  Tab(text: 'Past'),
+                ],
+              ),
+              const AppBarGradientDivider(),
+            ],
           ),
         ),
-        centerTitle: false,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const DoctorProfileScreen()),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            TabBar(
-              controller: _tabController,
-              labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondary,
-              indicatorColor: AppColors.primary,
-              tabs: const [
-                Tab(text: 'Live'),
-                Tab(text: 'Active'),
-                Tab(text: 'Past'),
-              ],
-            ),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -98,7 +85,7 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
     final requests = viewModel.liveRequests;
 
     if (requests.isEmpty) {
-      return _buildEmptyState(
+      return const EmptyStateWidget(
         icon: Icons.inbox_outlined,
         title: 'No live requests',
         subtitle: 'New requests will appear here when you\'re online.',
@@ -124,7 +111,7 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
     final bookings = viewModel.activeBookings;
 
     if (bookings.isEmpty) {
-      return _buildEmptyState(
+      return const EmptyStateWidget(
         icon: Icons.event_busy_outlined,
         title: 'No active visits',
         subtitle: 'Accepted bookings will show here.',
@@ -160,7 +147,7 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
     final bookings = viewModel.pastBookings;
 
     if (bookings.isEmpty) {
-      return _buildEmptyState(
+      return const EmptyStateWidget(
         icon: Icons.history,
         title: 'No past bookings',
         subtitle: 'Completed visits will appear here.',
@@ -174,28 +161,6 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
         final b = bookings[i];
         return BookingCard(booking: b);
       },
-    );
-  }
-
-  Widget _buildEmptyState({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text(title, style: AppTypography.bodySecondary.copyWith(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(subtitle, textAlign: TextAlign.center, style: AppTypography.bodySecondary.copyWith(fontSize: 14)),
-          ],
-        ),
-      ),
     );
   }
 }

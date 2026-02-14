@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/models/chat_message.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/chat_bubble.dart';
 
-/// Secure in-app messaging between doctor and patient for an active booking.
 class DoctorPatientChatScreen extends StatefulWidget {
   const DoctorPatientChatScreen({
     super.key,
@@ -13,14 +14,23 @@ class DoctorPatientChatScreen extends StatefulWidget {
   final String bookingId;
 
   @override
-  State<DoctorPatientChatScreen> createState() => _DoctorPatientChatScreenState();
+  State<DoctorPatientChatScreen> createState() =>
+      _DoctorPatientChatScreenState();
 }
 
 class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [
-    const ChatMessage(text: 'Hi! I\'m on my way for your consultation.', isFromDoctor: true, sentAt: null),
-    const ChatMessage(text: 'Thanks, see you soon.', isFromDoctor: false, sentAt: null),
+    const ChatMessage(
+      text: 'Hi! I\'m on my way for your consultation.',
+      isFromDoctor: true,
+      sentAt: null,
+    ),
+    const ChatMessage(
+      text: 'Thanks, see you soon.',
+      isFromDoctor: false,
+      sentAt: null,
+    ),
   ];
   final ScrollController _scrollController = ScrollController();
 
@@ -36,11 +46,9 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
     if (text.isEmpty) return;
 
     setState(() {
-      _messages.add(ChatMessage(
-        text: text,
-        isFromDoctor: true,
-        sentAt: DateTime.now(),
-      ));
+      _messages.add(
+        ChatMessage(text: text, isFromDoctor: true, sentAt: DateTime.now()),
+      );
       _controller.clear();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -68,7 +76,11 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
             const CircleAvatar(
               backgroundColor: AppColors.highlight,
               radius: 18,
-              child: Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+              child: Icon(
+                Icons.person_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -102,10 +114,7 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, i) {
                 final m = _messages[i];
-                return _ChatBubble(
-                  text: m.text,
-                  isFromDoctor: m.isFromDoctor,
-                );
+                return ChatBubble(text: m.text, isFromDoctor: m.isFromDoctor);
               },
             ),
           ),
@@ -130,7 +139,10 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                       ),
                       maxLines: null,
                       textInputAction: TextInputAction.send,
@@ -140,7 +152,11 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
                   const SizedBox(width: 8),
                   IconButton.filled(
                     onPressed: _sendMessage,
-                    icon: const Icon(Icons.send, color: AppColors.surface, size: 20),
+                    icon: const Icon(
+                      Icons.send,
+                      color: AppColors.surface,
+                      size: 20,
+                    ),
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
@@ -153,55 +169,6 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isFromDoctor;
-  final DateTime? sentAt;
-
-  const ChatMessage({
-    required this.text,
-    required this.isFromDoctor,
-    this.sentAt,
-  });
-}
-
-class _ChatBubble extends StatelessWidget {
-  const _ChatBubble({
-    required this.text,
-    required this.isFromDoctor,
-  });
-
-  final String text;
-  final bool isFromDoctor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: isFromDoctor ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isFromDoctor ? AppColors.primary : AppColors.highlight,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isFromDoctor ? 16 : 4),
-            bottomRight: Radius.circular(isFromDoctor ? 4 : 16),
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 14,
-            color: isFromDoctor ? AppColors.surface : AppColors.textPrimary,
-          ),
-        ),
       ),
     );
   }

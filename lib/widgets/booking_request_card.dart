@@ -62,12 +62,18 @@ class BookingRequestCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.place_outlined, size: 14, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.place_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             request.patientLocation,
-                            style: AppTypography.bodySecondary.copyWith(fontSize: 13),
+                            style: AppTypography.bodySecondary.copyWith(
+                              fontSize: 13,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -83,7 +89,11 @@ class BookingRequestCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.medical_services_outlined, size: 16, color: AppColors.primary),
+              const Icon(
+                Icons.medical_services_outlined,
+                size: 16,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -100,19 +110,23 @@ class BookingRequestCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.highlight,
+              color: AppColors.earningsHighlight,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                const Icon(Icons.payments_outlined, size: 18, color: AppColors.primary),
+                const Icon(
+                  Icons.payments_outlined,
+                  size: 18,
+                  color: AppColors.earnings,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Estimated earnings: £${request.estimatedEarnings.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+                    color: AppColors.earnings,
                   ),
                 ),
               ],
