@@ -71,11 +71,7 @@ class LiveRequestsSection extends StatelessWidget {
             ),
             child: const Row(
               children: [
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 32,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.inbox_outlined, size: 32, color: AppColors.primary),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
