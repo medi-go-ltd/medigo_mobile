@@ -9,6 +9,15 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B7280);
   static const Color border = Color(0xFFD1D5DB);
   static const Color highlight = Color(0xFFE0F7FA);
+
+  static const Color earnings = Color(0xFF059669);
+  static const Color earningsHighlight = Color(0xFFECFDF5);
+
+  static const Color time = Color(0xFFD97706);
+  static const Color timeHighlight = Color(0xFFFFFBEB);
+
+  static const Color info = Color(0xFF2563EB);
+  static const Color infoHighlight = Color(0xFFEFF6FF);
 }
 
 class AppTypography {

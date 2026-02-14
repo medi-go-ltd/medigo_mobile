@@ -5,6 +5,7 @@ import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/widgets/app_text_field.dart';
 import 'package:medigo_mobile/widgets/file_upload_field.dart';
 import 'package:medigo_mobile/widgets/multi_file_upload_field.dart';
+import 'package:medigo_mobile/widgets/section_title.dart';
 import 'package:provider/provider.dart';
 
 class DoctorProfileScreen extends StatefulWidget {
@@ -84,7 +85,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle('Personal Details'),
+            const SectionTitle(title: 'Personal Details'),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -136,7 +137,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               icon: Icons.home_outlined,
             ),
             const SizedBox(height: 32),
-            _buildSectionTitle('Fees'),
+            const SectionTitle(title: 'Fees'),
             const SizedBox(height: 16),
             AppTextField(
               controller: _consultationFeeController,
@@ -156,7 +157,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 32),
-            _buildSectionTitle('Availability'),
+            const SectionTitle(title: 'Availability'),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -211,7 +212,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 32),
-            _buildSectionTitle('Documents'),
+            const SectionTitle(title: 'Documents'),
             const SizedBox(height: 8),
             Text(
               'Update your qualifications or photo ID if needed.',
@@ -251,17 +252,6 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
       ),
     );
   }

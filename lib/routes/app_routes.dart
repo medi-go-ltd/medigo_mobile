@@ -5,7 +5,6 @@ import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/features/auth/signup_screen.dart';
 import 'package:medigo_mobile/features/auth/verification_pending_screen.dart';
 import 'package:medigo_mobile/features/home/home_screen.dart';
-import 'package:medigo_mobile/features/home/patient_home_screen.dart';
 import 'package:medigo_mobile/features/splash/splash_screen.dart';
 import 'package:medigo_mobile/features/welcome/welcome_screen.dart';
 import 'package:medigo_mobile/models/user_role.dart';
@@ -74,9 +73,6 @@ class AppRoutes {
                 user.role == UserRole.doctor &&
                 !user.isVerified) {
               return const VerificationPendingScreen();
-            }
-            if (user?.role == UserRole.patient) {
-              return const PatientHomeScreen();
             }
             return const HomeScreen();
           },
