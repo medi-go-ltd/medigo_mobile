@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:medigo_mobile/features/home/doctor/doctor_bookings_screen.dart';
+import 'package:medigo_mobile/features/home/doctor/doctor_appointments_screen.dart';
 import '../../../helpers/test_helpers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,21 +9,21 @@ void main() {
     await initLoggedInDoctor();
   });
 
-  group('DoctorBookingsScreen Tests', () {
+  group('DoctorAppointmentsScreen Tests', () {
     testWidgets('displays screen title', (WidgetTester tester) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorBookingsScreen()),
+        wrapWithProviders(const DoctorAppointmentsScreen()),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Bookings'), findsOneWidget);
+      expect(find.text('Appointments'), findsOneWidget);
     });
 
     testWidgets('displays Live, Active, Past tabs', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorBookingsScreen()),
+        wrapWithProviders(const DoctorAppointmentsScreen()),
       );
       await tester.pumpAndSettle();
 
@@ -34,7 +34,7 @@ void main() {
 
     testWidgets('shows Live tab content', (WidgetTester tester) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorBookingsScreen()),
+        wrapWithProviders(const DoctorAppointmentsScreen()),
       );
       await tester.pumpAndSettle();
 
@@ -44,7 +44,7 @@ void main() {
 
     testWidgets('can switch to Active tab', (WidgetTester tester) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorBookingsScreen()),
+        wrapWithProviders(const DoctorAppointmentsScreen()),
       );
       await tester.pumpAndSettle();
 
@@ -56,14 +56,14 @@ void main() {
 
     testWidgets('can switch to Past tab', (WidgetTester tester) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorBookingsScreen()),
+        wrapWithProviders(const DoctorAppointmentsScreen()),
       );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Past'));
       await tester.pumpAndSettle();
 
-      // Mock data has 2 past bookings (Sarah Mitchell, Robert Clarke)
+      // Mock data has 2 past appointments (Sarah Mitchell, Robert Clarke)
       expect(find.text('Sarah Mitchell'), findsOneWidget);
     });
   });

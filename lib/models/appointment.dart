@@ -1,15 +1,15 @@
-enum BookingStatus { active, completed }
+enum AppointmentStatus { active, completed }
 
-class Booking {
+class Appointment {
   final String id;
   final String patientName;
   final String patientLocation;
   final String reasonForVisit;
   final double earnings;
   final DateTime date;
-  final BookingStatus status;
+  final AppointmentStatus status;
 
-  Booking({
+  Appointment({
     required this.id,
     required this.patientName,
     required this.patientLocation,

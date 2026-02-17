@@ -7,11 +7,11 @@ class DoctorPatientChatScreen extends StatefulWidget {
   const DoctorPatientChatScreen({
     super.key,
     required this.patientName,
-    required this.bookingId,
+    required this.appointmentId,
   });
 
   final String patientName;
-  final String bookingId;
+  final String appointmentId;
 
   @override
   State<DoctorPatientChatScreen> createState() =>

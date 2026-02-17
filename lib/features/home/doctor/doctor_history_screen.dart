@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
-import 'package:medigo_mobile/widgets/booking_card.dart';
+import 'package:medigo_mobile/widgets/appointment_card.dart';
 import 'package:medigo_mobile/widgets/doctor_screen_app_bar.dart';
 import 'package:medigo_mobile/widgets/empty_state_widget.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +12,7 @@ class DoctorHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DoctorHomeViewModel>();
-    final pastBookings = viewModel.pastBookings;
+    final pastAppointments = viewModel.pastAppointments;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -28,14 +28,14 @@ class DoctorHistoryScreen extends StatelessWidget {
                 style: AppTypography.bodySecondary,
               ),
               const SizedBox(height: 20),
-              if (pastBookings.isEmpty)
+              if (pastAppointments.isEmpty)
                 const EmptyStateWidget(
                   icon: Icons.history,
                   title: 'No completed visits yet',
                   useContainerStyle: true,
                 )
               else
-                ...pastBookings.map((b) => BookingCard(booking: b)),
+                ...pastAppointments.map((a) => AppointmentCard(appointment: a)),
             ],
           ),
         ),

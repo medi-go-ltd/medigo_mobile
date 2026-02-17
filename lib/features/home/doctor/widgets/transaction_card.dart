@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/models/payment_transaction.dart';
+import 'package:medigo_mobile/models/earnings_transaction.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 
 class TransactionCard extends StatelessWidget {
@@ -8,7 +8,7 @@ class TransactionCard extends StatelessWidget {
     required this.transaction,
   });
 
-  final PaymentTransaction transaction;
+  final EarningsTransaction transaction;
 
   @override
   Widget build(BuildContext context) {

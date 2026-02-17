@@ -10,14 +10,14 @@ void main() {
         MaterialApp(
           theme: AppTheme.light,
           home: const Scaffold(
-            appBar: DoctorScreenAppBar(title: 'Payments'),
+            appBar: DoctorScreenAppBar(title: 'Earnings'),
             body: SizedBox(),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Payments'), findsOneWidget);
+      expect(find.text('Earnings'), findsOneWidget);
     });
 
     testWidgets('displays settings icon by default', (

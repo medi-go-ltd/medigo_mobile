@@ -1,3 +1,5 @@
+import 'package:medigo_mobile/utils/address_utils.dart';
+
 class ValidationUtils {
   static String? validateFirstName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -116,6 +118,36 @@ class ValidationUtils {
     }
     if (value.trim().length < 10) {
       return 'Please enter a complete address';
+    }
+    return null;
+  }
+
+  static String? validateAddressLine1(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Street address is required';
+    }
+    if (value.trim().length < 5) {
+      return 'Please enter a complete street address';
+    }
+    return null;
+  }
+
+  static String? validateTown(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Town or city is required';
+    }
+    if (value.trim().length < 2) {
+      return 'Please enter a valid town or city';
+    }
+    return null;
+  }
+
+  static String? validateUkPostcode(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Postcode is required';
+    }
+    if (!AddressUtils.isValidUkPostcode(value)) {
+      return 'Please enter a valid UK postcode (e.g. SW1A 1AA)';
     }
     return null;
   }

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
@@ -7,6 +9,7 @@ import 'package:medigo_mobile/models/doctor.dart';
 import 'package:medigo_mobile/models/route_info.dart';
 import 'package:medigo_mobile/services/directions_service.dart';
 import 'package:medigo_mobile/services/location_service.dart';
+import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/utils/location_utils.dart';
 
 class PatientHomeViewModel extends ChangeNotifier {
@@ -49,16 +52,52 @@ class PatientHomeViewModel extends ChangeNotifier {
 
   Future<void> _loadDoctorIcon() async {
     try {
-      final BitmapDescriptor icon = await BitmapDescriptor.asset(
-        const ImageConfiguration(size: Size(40, 40)),
-        'assets/images/doctor-marker.png',
+      final byteData =
+          await rootBundle.load('assets/images/doctor-marker.png');
+      final codec = await ui.instantiateImageCodec(
+        byteData.buffer.asUint8List(),
+        targetWidth: 40,
+        targetHeight: 40,
       );
-      _doctorIcon = icon;
-      notifyListeners();
+      final frame = await codec.getNextFrame();
+      final ui.Image image = frame.image;
+
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      final size = Size(image.width.toDouble(), image.height.toDouble());
+
+      final paint = Paint()
+        ..colorFilter = const ColorFilter.mode(
+          AppColors.primary,
+          BlendMode.srcIn,
+        );
+
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        paint,
+      );
+
+      final picture = recorder.endRecording();
+      final img = await picture.toImage(size.width.toInt(), size.height.toInt());
+      final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+
+      if (pngBytes != null) {
+        _doctorIcon = BitmapDescriptor.bytes(
+          pngBytes.buffer.asUint8List(),
+        );
+      } else {
+        _doctorIcon = BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueCyan,
+        );
+      }
     } catch (e) {
-      _doctorIcon = null;
-      notifyListeners();
+      _doctorIcon = BitmapDescriptor.defaultMarkerWithHue(
+        BitmapDescriptor.hueCyan,
+      );
     }
+    notifyListeners();
   }
 
   Future<void> _initializeLocationAndLoadDoctors() async {

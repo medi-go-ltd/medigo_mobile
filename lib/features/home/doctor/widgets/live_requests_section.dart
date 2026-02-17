@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/metrics_row.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
-import 'package:medigo_mobile/widgets/booking_request_card.dart';
+import 'package:medigo_mobile/widgets/appointment_request_card.dart';
 import 'package:provider/provider.dart';
 
 class LiveRequestsSection extends StatelessWidget {
@@ -84,10 +84,10 @@ class LiveRequestsSection extends StatelessWidget {
           )
         else
           ...requests.map(
-            (r) => BookingRequestCard(
+            (r) => AppointmentRequestCard(
               request: r,
-              onAccept: () => viewModel.acceptBooking(r.id),
-              onDecline: () => viewModel.declineBooking(r.id),
+              onAccept: () => viewModel.acceptAppointment(r.id),
+              onDecline: () => viewModel.declineAppointment(r.id),
             ),
           ),
         const SizedBox(height: 20),

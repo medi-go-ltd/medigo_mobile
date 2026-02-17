@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/models/doctor_profile.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/utils/address_utils.dart';
+import 'package:medigo_mobile/utils/validation_utils.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/widgets/app_text_field.dart';
 import 'package:medigo_mobile/widgets/file_upload_field.dart';
@@ -16,11 +18,16 @@ class DoctorProfileScreen extends StatefulWidget {
 }
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
-  late TextEditingController _addressController;
+  late TextEditingController _addressLine1Controller;
+  late TextEditingController _addressLine2Controller;
+  late TextEditingController _townController;
+  late TextEditingController _postcodeController;
   late TextEditingController _consultationFeeController;
   late TextEditingController _callOutFeeController;
   late TextEditingController _radiusController;
@@ -36,7 +43,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     _lastNameController = TextEditingController(text: profile.lastName);
     _emailController = TextEditingController(text: profile.email);
     _phoneController = TextEditingController(text: profile.phoneNumber);
-    _addressController = TextEditingController(text: profile.address);
+    final parsed = AddressUtils.parseAddress(profile.address);
+    _addressLine1Controller = TextEditingController(text: parsed.line1);
+    _addressLine2Controller = TextEditingController(text: parsed.line2);
+    _townController = TextEditingController(text: parsed.town);
+    _postcodeController = TextEditingController(text: parsed.postcode);
     _consultationFeeController = TextEditingController(text: profile.consultationFee.toStringAsFixed(0));
     _callOutFeeController = TextEditingController(
       text: profile.callOutFee?.toStringAsFixed(0) ?? '',
@@ -50,7 +61,10 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
+    _addressLine1Controller.dispose();
+    _addressLine2Controller.dispose();
+    _townController.dispose();
+    _postcodeController.dispose();
     _consultationFeeController.dispose();
     _callOutFeeController.dispose();
     _radiusController.dispose();
@@ -82,7 +96,9 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
+        child: Form(
+          key: _formKey,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SectionTitle(title: 'Personal Details'),
@@ -130,11 +146,42 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             ),
             const SizedBox(height: 16),
             AppTextField(
-              controller: _addressController,
+              controller: _addressLine1Controller,
               focusNode: FocusNode(),
-              label: 'Address',
-              hintText: 'Home address',
+              label: 'Address line 1',
+              hintText: 'House number and street',
               icon: Icons.home_outlined,
+              keyboardType: TextInputType.streetAddress,
+              validator: ValidationUtils.validateAddressLine1,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _addressLine2Controller,
+              focusNode: FocusNode(),
+              label: 'Address line 2 (optional)',
+              hintText: 'Flat, building, etc.',
+              icon: Icons.apartment_outlined,
+              keyboardType: TextInputType.streetAddress,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _townController,
+              focusNode: FocusNode(),
+              label: 'Town / City',
+              hintText: 'e.g. London',
+              icon: Icons.location_city_outlined,
+              keyboardType: TextInputType.streetAddress,
+              validator: ValidationUtils.validateTown,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _postcodeController,
+              focusNode: FocusNode(),
+              label: 'Postcode',
+              hintText: 'e.g. SW1A 1AA',
+              icon: Icons.markunread_mailbox_outlined,
+              keyboardType: TextInputType.streetAddress,
+              validator: ValidationUtils.validateUkPostcode,
             ),
             const SizedBox(height: 32),
             const SectionTitle(title: 'Fees'),
@@ -144,7 +191,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
               focusNode: FocusNode(),
               label: 'Consultation Fee (£)',
               hintText: 'e.g. 75',
-              icon: Icons.attach_money,
+              icon: Icons.currency_pound,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 16),
@@ -252,23 +299,33 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             const SizedBox(height: 24),
           ],
         ),
+        ),
       ),
     );
   }
 
   void _saveProfile(BuildContext context) {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
     final consultationFee = double.tryParse(_consultationFeeController.text.trim());
     final callOutFee = _callOutFeeController.text.trim().isEmpty
         ? null
         : double.tryParse(_callOutFeeController.text.trim());
     final radiusKm = double.tryParse(_radiusController.text.trim()) ?? 15;
 
+    final address = AddressUtils.formatAddress(
+      line1: _addressLine1Controller.text.trim(),
+      line2: _addressLine2Controller.text.trim(),
+      town: _townController.text.trim(),
+      postcode: _postcodeController.text.trim(),
+    );
+
     final profile = DoctorProfile(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
-      address: _addressController.text.trim(),
+      address: address,
       consultationFee: consultationFee ?? 75,
       callOutFee: callOutFee,
       radiusKm: radiusKm,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/earnings_by_type_section.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/earnings_chart_section.dart';
-import 'package:medigo_mobile/features/home/doctor/widgets/payment_history_section.dart';
+import 'package:medigo_mobile/features/home/doctor/widgets/earnings_history_section.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/projected_earnings_card.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/total_earnings_card.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/upcoming_earnings_card.dart';
@@ -10,17 +10,17 @@ import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/widgets/doctor_screen_app_bar.dart';
 import 'package:provider/provider.dart';
 
-class DoctorPaymentsScreen extends StatefulWidget {
-  const DoctorPaymentsScreen({super.key});
+class DoctorEarningsScreen extends StatefulWidget {
+  const DoctorEarningsScreen({super.key});
 
   @override
-  State<DoctorPaymentsScreen> createState() => _DoctorPaymentsScreenState();
+  State<DoctorEarningsScreen> createState() => _DoctorEarningsScreenState();
 }
 
-class _DoctorPaymentsScreenState extends State<DoctorPaymentsScreen>
+class _DoctorEarningsScreenState extends State<DoctorEarningsScreen>
     with TickerProviderStateMixin {
   int _chartDays = 7;
-  PaymentHistoryPeriod _historyFilter = PaymentHistoryPeriod.all;
+  EarningsHistoryPeriod _historyFilter = EarningsHistoryPeriod.all;
 
   bool _animationsInitialized = false;
 
@@ -110,7 +110,7 @@ class _DoctorPaymentsScreenState extends State<DoctorPaymentsScreen>
     _ensureAnimationsInitialized();
     final viewModel = context.watch<DoctorHomeViewModel>();
     final totalEarnings = viewModel.totalEarnings;
-    final history = viewModel.paymentHistoryFiltered(_historyFilter);
+    final history = viewModel.earningsHistoryFiltered(_historyFilter);
     final totalInPeriod = viewModel.totalEarningsInFiltered(_historyFilter);
     final upcoming = viewModel.upcomingEarnings;
     final byDescription = viewModel.earningsByDescription;
@@ -120,11 +120,11 @@ class _DoctorPaymentsScreenState extends State<DoctorPaymentsScreen>
     final chartData = viewModel.earningsByDay(chartStart, chartEnd);
     final avgDaily = viewModel.averageDailyEarningsLastNDays(7);
     final projectedWeek = viewModel.projectedEarningsThisWeek;
-    final hasEnoughHistory = viewModel.paymentHistory.isNotEmpty;
+    final hasEnoughHistory = viewModel.earningsHistory.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: const DoctorScreenAppBar(title: 'Payments'),
+      appBar: const DoctorScreenAppBar(title: 'Earnings'),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -151,7 +151,7 @@ class _DoctorPaymentsScreenState extends State<DoctorPaymentsScreen>
                   animation: _cardsAnim,
                   child: UpcomingEarningsCard(
                     amount: upcoming,
-                    bookingCount: viewModel.activeBookings.length,
+                    appointmentCount: viewModel.activeAppointments.length,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -175,7 +175,7 @@ class _DoctorPaymentsScreenState extends State<DoctorPaymentsScreen>
               ],
               _buildAnimatedSection(
                 animation: _historyHeaderAnim,
-                child: PaymentHistorySection(
+                child: EarningsHistorySection(
                   history: history,
                   totalInPeriod: totalInPeriod,
                   filter: _historyFilter,

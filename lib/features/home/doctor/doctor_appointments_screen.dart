@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/features/home/doctor/appointment_visit_notes_screen.dart';
 import 'package:medigo_mobile/features/home/doctor/doctor_patient_chat_screen.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/utils/map_launcher.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/widgets/app_bar_gradient_divider.dart';
-import 'package:medigo_mobile/widgets/booking_card.dart';
-import 'package:medigo_mobile/widgets/booking_request_card.dart';
+import 'package:medigo_mobile/widgets/appointment_card.dart';
+import 'package:medigo_mobile/widgets/appointment_request_card.dart';
 import 'package:medigo_mobile/widgets/doctor_screen_app_bar.dart';
 import 'package:medigo_mobile/widgets/empty_state_widget.dart';
 import 'package:provider/provider.dart';
 
-class DoctorBookingsScreen extends StatefulWidget {
-  const DoctorBookingsScreen({super.key});
+class DoctorAppointmentsScreen extends StatefulWidget {
+  const DoctorAppointmentsScreen({super.key});
 
   @override
-  State<DoctorBookingsScreen> createState() => _DoctorBookingsScreenState();
+  State<DoctorAppointmentsScreen> createState() =>
+      _DoctorAppointmentsScreenState();
 }
 
-class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
+class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -38,7 +40,7 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: DoctorScreenAppBar(
-        title: 'Bookings',
+        title: 'Appointments',
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48 + 1.5),
           child: Column(
@@ -97,10 +99,10 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
       itemCount: requests.length,
       itemBuilder: (_, i) {
         final r = requests[i];
-        return BookingRequestCard(
+        return AppointmentRequestCard(
           request: r,
-          onAccept: () => viewModel.acceptBooking(r.id),
-          onDecline: () => viewModel.declineBooking(r.id),
+          onAccept: () => viewModel.acceptAppointment(r.id),
+          onDecline: () => viewModel.declineAppointment(r.id),
         );
       },
     );
@@ -108,33 +110,39 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
 
   Widget _buildActiveTab() {
     final viewModel = context.watch<DoctorHomeViewModel>();
-    final bookings = viewModel.activeBookings;
+    final appointments = viewModel.activeAppointments;
 
-    if (bookings.isEmpty) {
+    if (appointments.isEmpty) {
       return const EmptyStateWidget(
         icon: Icons.event_busy_outlined,
         title: 'No active visits',
-        subtitle: 'Accepted bookings will show here.',
+        subtitle: 'Accepted appointments will show here.',
       );
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(24),
-      itemCount: bookings.length,
+      itemCount: appointments.length,
       itemBuilder: (_, i) {
-        final b = bookings[i];
-        return BookingCard(
-          booking: b,
+        final a = appointments[i];
+        return AppointmentCard(
+          appointment: a,
           showCompleteButton: true,
-          onComplete: () => viewModel.completeBooking(b.id),
-          onNavigate: () => launchMapNavigation(b.patientLocation),
+          onComplete: () => viewModel.completeAppointment(a.id),
+          onNavigate: () => launchMapNavigation(a.patientLocation),
           onMessage: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => DoctorPatientChatScreen(
-                patientName: b.patientName,
-                bookingId: b.id,
+                patientName: a.patientName,
+                appointmentId: a.id,
               ),
+            ),
+          ),
+          onNotes: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AppointmentVisitNotesScreen(appointment: a),
             ),
           ),
         );
@@ -144,22 +152,22 @@ class _DoctorBookingsScreenState extends State<DoctorBookingsScreen>
 
   Widget _buildPastTab() {
     final viewModel = context.watch<DoctorHomeViewModel>();
-    final bookings = viewModel.pastBookings;
+    final appointments = viewModel.pastAppointments;
 
-    if (bookings.isEmpty) {
+    if (appointments.isEmpty) {
       return const EmptyStateWidget(
         icon: Icons.history,
-        title: 'No past bookings',
+        title: 'No past appointments',
         subtitle: 'Completed visits will appear here.',
       );
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(24),
-      itemCount: bookings.length,
+      itemCount: appointments.length,
       itemBuilder: (_, i) {
-        final b = bookings[i];
-        return BookingCard(booking: b);
+        final a = appointments[i];
+        return AppointmentCard(appointment: a);
       },
     );
   }

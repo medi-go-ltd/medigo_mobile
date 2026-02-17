@@ -3,8 +3,6 @@ import 'package:medigo_mobile/features/home/doctor/doctor_profile_screen.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/widgets/app_bar_gradient_divider.dart';
 
-/// Reusable AppBar for doctor screens with title, optional settings icon,
-/// optional leading (e.g. back button), and gradient divider.
 class DoctorScreenAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   const DoctorScreenAppBar({
@@ -59,7 +57,8 @@ class DoctorScreenAppBar extends StatelessWidget
               ),
             ]
           : null,
-      bottom: bottom ??
+      bottom:
+          bottom ??
           const PreferredSize(
             preferredSize: Size.fromHeight(1.5),
             child: AppBarGradientDivider(),
