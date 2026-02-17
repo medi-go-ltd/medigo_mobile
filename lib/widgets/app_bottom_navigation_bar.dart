@@ -66,7 +66,7 @@ class AppBottomNavigationBar extends StatelessWidget {
           const BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
-            label: 'Bookings',
+            label: 'Appointments',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
@@ -76,7 +76,7 @@ class AppBottomNavigationBar extends StatelessWidget {
           const BottomNavigationBarItem(
             icon: Icon(Icons.payment_outlined),
             activeIcon: Icon(Icons.payment),
-            label: 'Payments',
+            label: 'Earnings',
           ),
         ],
       ),

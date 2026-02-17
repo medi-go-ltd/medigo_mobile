@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/features/home/doctor/doctor_profile_screen.dart';
+import 'package:medigo_mobile/features/home/shared/safety_checkup_screen.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
@@ -167,6 +168,18 @@ class DoctorSliverAppBar extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const DoctorProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('Safety Check-up'),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const SafetyCheckupScreen(),
                   ),
                 );
               },

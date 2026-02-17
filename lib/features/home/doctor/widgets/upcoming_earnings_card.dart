@@ -5,11 +5,11 @@ class UpcomingEarningsCard extends StatelessWidget {
   const UpcomingEarningsCard({
     super.key,
     required this.amount,
-    required this.bookingCount,
+    required this.appointmentCount,
   });
 
   final double amount;
-  final int bookingCount;
+  final int appointmentCount;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +48,7 @@ class UpcomingEarningsCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '$bookingCount confirmed ${bookingCount == 1 ? 'visit' : 'visits'}',
+                  '$appointmentCount confirmed ${appointmentCount == 1 ? 'visit' : 'visits'}',
                   style: AppTypography.bodySecondary.copyWith(fontSize: 12),
                 ),
               ],

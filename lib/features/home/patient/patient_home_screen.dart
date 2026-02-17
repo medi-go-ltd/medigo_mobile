@@ -130,7 +130,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
-            label: 'Bookings',
+            label: 'Appointments',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
@@ -140,7 +140,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.payment_outlined),
             activeIcon: Icon(Icons.payment),
-            label: 'Payments',
+            label: 'Earnings',
           ),
         ],
       ),

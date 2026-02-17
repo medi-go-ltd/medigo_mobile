@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/models/booking.dart';
+import 'package:medigo_mobile/models/appointment.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 
-class BookingCard extends StatelessWidget {
-  const BookingCard({
+class AppointmentCard extends StatelessWidget {
+  const AppointmentCard({
     super.key,
-    required this.booking,
+    required this.appointment,
     this.onComplete,
     this.onNavigate,
     this.onMessage,
+    this.onNotes,
     this.showCompleteButton = false,
   });
 
-  final Booking booking;
+  final Appointment appointment;
   final VoidCallback? onComplete;
   final VoidCallback? onNavigate;
   final VoidCallback? onMessage;
+  final VoidCallback? onNotes;
   final bool showCompleteButton;
 
   @override
@@ -44,7 +46,7 @@ class BookingCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.patientName,
+                      appointment.patientName,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -53,7 +55,7 @@ class BookingCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      booking.patientLocation,
+                      appointment.patientLocation,
                       style: AppTypography.bodySecondary.copyWith(fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -62,7 +64,7 @@ class BookingCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '£${booking.earnings.toStringAsFixed(2)}',
+                '£${appointment.earnings.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -73,7 +75,7 @@ class BookingCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            booking.reasonForVisit,
+            appointment.reasonForVisit,
             style: AppTypography.bodySecondary.copyWith(fontSize: 13),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -98,13 +100,30 @@ class BookingCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                if (onNavigate != null && onMessage != null) const SizedBox(width: 10),
+                if (onNavigate != null && (onMessage != null || onNotes != null)) const SizedBox(width: 8),
                 if (onMessage != null)
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: onMessage,
                       icon: const Icon(Icons.chat_bubble_outline, size: 18),
                       label: const Text('Message'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (onMessage != null && onNotes != null) const SizedBox(width: 8),
+                if (onNotes != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onNotes,
+                      icon: const Icon(Icons.note_add_outlined, size: 18),
+                      label: const Text('Notes'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: AppColors.primary),

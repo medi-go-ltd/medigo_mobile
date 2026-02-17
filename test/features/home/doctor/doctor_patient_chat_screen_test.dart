@@ -13,7 +13,7 @@ void main() {
           theme: AppTheme.light,
           home: const DoctorPatientChatScreen(
             patientName: 'Sarah Mitchell',
-            bookingId: 'b-1',
+            appointmentId: 'b-1',
           ),
         ),
       );
@@ -29,7 +29,7 @@ void main() {
           theme: AppTheme.light,
           home: const DoctorPatientChatScreen(
             patientName: 'Test',
-            bookingId: 'b-1',
+            appointmentId: 'b-1',
           ),
         ),
       );
@@ -44,7 +44,7 @@ void main() {
           theme: AppTheme.light,
           home: const DoctorPatientChatScreen(
             patientName: 'Test',
-            bookingId: 'b-1',
+            appointmentId: 'b-1',
           ),
         ),
       );
@@ -60,7 +60,7 @@ void main() {
           theme: AppTheme.light,
           home: const DoctorPatientChatScreen(
             patientName: 'Test',
-            bookingId: 'b-1',
+            appointmentId: 'b-1',
           ),
         ),
       );

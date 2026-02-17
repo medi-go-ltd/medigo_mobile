@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:medigo_mobile/features/home/doctor/doctor_payments_screen.dart';
+import 'package:medigo_mobile/features/home/doctor/doctor_earnings_screen.dart';
 import '../../../helpers/test_helpers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,21 +9,21 @@ void main() {
     await initLoggedInDoctor();
   });
 
-  group('DoctorPaymentsScreen Tests', () {
+  group('DoctorEarningsScreen Tests', () {
     testWidgets('displays screen title', (WidgetTester tester) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorPaymentsScreen()),
+        wrapWithProviders(const DoctorEarningsScreen()),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Payments'), findsOneWidget);
+      expect(find.text('Earnings'), findsOneWidget);
     });
 
     testWidgets('displays Total Earnings card', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorPaymentsScreen()),
+        wrapWithProviders(const DoctorEarningsScreen()),
       );
       await tester.pumpAndSettle();
 
@@ -34,22 +34,22 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorPaymentsScreen()),
+        wrapWithProviders(const DoctorEarningsScreen()),
       );
       await tester.pumpAndSettle();
 
       expect(find.text('Earnings over time'), findsOneWidget);
     });
 
-    testWidgets('displays Payment History section', (
+    testWidgets('displays Earnings History section', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        wrapWithProviders(const DoctorPaymentsScreen()),
+        wrapWithProviders(const DoctorEarningsScreen()),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Payment History'), findsOneWidget);
+      expect(find.text('Earnings History'), findsOneWidget);
     });
   });
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/models/payment_transaction.dart';
+import 'package:medigo_mobile/models/earnings_transaction.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/transaction_card.dart';
 import 'package:medigo_mobile/widgets/scale_on_tap.dart';
 
-class PaymentHistorySection extends StatelessWidget {
-  const PaymentHistorySection({
+class EarningsHistorySection extends StatelessWidget {
+  const EarningsHistorySection({
     super.key,
     required this.history,
     required this.totalInPeriod,
@@ -14,10 +14,10 @@ class PaymentHistorySection extends StatelessWidget {
     required this.onFilterChanged,
   });
 
-  final List<PaymentTransaction> history;
+  final List<EarningsTransaction> history;
   final double totalInPeriod;
-  final PaymentHistoryPeriod filter;
-  final ValueChanged<PaymentHistoryPeriod> onFilterChanged;
+  final EarningsHistoryPeriod filter;
+  final ValueChanged<EarningsHistoryPeriod> onFilterChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class PaymentHistorySection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Payment History',
+              'Earnings History',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -40,31 +40,31 @@ class PaymentHistorySection extends StatelessWidget {
               children: [
                 _HistoryChip(
                   label: 'All',
-                  value: PaymentHistoryPeriod.all,
-                  selected: filter == PaymentHistoryPeriod.all,
-                  onTap: () => onFilterChanged(PaymentHistoryPeriod.all),
+                  value: EarningsHistoryPeriod.all,
+                  selected: filter == EarningsHistoryPeriod.all,
+                  onTap: () => onFilterChanged(EarningsHistoryPeriod.all),
                 ),
                 const SizedBox(width: 8),
                 _HistoryChip(
                   label: 'This month',
-                  value: PaymentHistoryPeriod.thisMonth,
-                  selected: filter == PaymentHistoryPeriod.thisMonth,
-                  onTap: () => onFilterChanged(PaymentHistoryPeriod.thisMonth),
+                  value: EarningsHistoryPeriod.thisMonth,
+                  selected: filter == EarningsHistoryPeriod.thisMonth,
+                  onTap: () => onFilterChanged(EarningsHistoryPeriod.thisMonth),
                 ),
                 const SizedBox(width: 8),
                 _HistoryChip(
                   label: 'Last 3 months',
-                  value: PaymentHistoryPeriod.last3Months,
-                  selected: filter == PaymentHistoryPeriod.last3Months,
+                  value: EarningsHistoryPeriod.last3Months,
+                  selected: filter == EarningsHistoryPeriod.last3Months,
                   onTap: () =>
-                      onFilterChanged(PaymentHistoryPeriod.last3Months),
+                      onFilterChanged(EarningsHistoryPeriod.last3Months),
                 ),
               ],
             ),
             if (history.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                '${history.length} ${history.length == 1 ? 'payment' : 'payments'} · £${totalInPeriod.toStringAsFixed(2)}',
+                '${history.length} ${history.length == 1 ? 'earning' : 'earnings'} · £${totalInPeriod.toStringAsFixed(2)}',
                 style: AppTypography.bodySecondary.copyWith(fontSize: 13),
               ),
             ],
@@ -112,7 +112,7 @@ class _HistoryChip extends StatelessWidget {
   });
 
   final String label;
-  final PaymentHistoryPeriod value;
+  final EarningsHistoryPeriod value;
   final bool selected;
   final VoidCallback onTap;
 

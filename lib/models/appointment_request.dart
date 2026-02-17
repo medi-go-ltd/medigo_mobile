@@ -1,4 +1,4 @@
-class BookingRequest {
+class AppointmentRequest {
   final String id;
   final String patientName;
   final String patientLocation;
@@ -7,7 +7,7 @@ class BookingRequest {
   final DateTime requestedAt;
   final String? patientPhone;
 
-  BookingRequest({
+  AppointmentRequest({
     required this.id,
     required this.patientName,
     required this.patientLocation,
@@ -17,8 +17,8 @@ class BookingRequest {
     this.patientPhone,
   });
 
-  factory BookingRequest.fromJson(Map<String, dynamic> json) {
-    return BookingRequest(
+  factory AppointmentRequest.fromJson(Map<String, dynamic> json) {
+    return AppointmentRequest(
       id: json['id'] as String,
       patientName: json['patientName'] as String? ?? json['patient_name'] as String? ?? '',
       patientLocation: json['patientLocation'] as String? ?? json['patient_location'] as String? ?? '',

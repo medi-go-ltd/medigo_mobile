@@ -18,6 +18,9 @@ class AppColors {
 
   static const Color info = Color(0xFF2563EB);
   static const Color infoHighlight = Color(0xFFEFF6FF);
+
+  static const Color warning = Color(0xFFDC2626);
+  static const Color warningHighlight = Color(0xFFFEF2F2);
 }
 
 class AppTypography {

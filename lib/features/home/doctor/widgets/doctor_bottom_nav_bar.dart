@@ -18,9 +18,9 @@ class DoctorBottomNavBar extends StatelessWidget {
 
   static const _navItems = [
     (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.calendar_today_rounded, label: 'Bookings'),
+    (icon: Icons.calendar_today_rounded, label: 'Appointments'),
     (icon: Icons.history_rounded, label: 'History'),
-    (icon: Icons.account_balance_wallet_rounded, label: 'Payments'),
+    (icon: Icons.account_balance_wallet_rounded, label: 'Earnings'),
   ];
 
   @override

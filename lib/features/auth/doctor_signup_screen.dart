@@ -3,6 +3,7 @@ import 'package:medigo_mobile/constants/specialisations.dart';
 import 'package:medigo_mobile/models/doctor_registration_request.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/utils/address_utils.dart';
 import 'package:medigo_mobile/utils/validation_utils.dart';
 import 'package:medigo_mobile/view_models/signup_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
@@ -30,7 +31,10 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _addressController = TextEditingController();
+  final _addressLine1Controller = TextEditingController();
+  final _addressLine2Controller = TextEditingController();
+  final _townController = TextEditingController();
+  final _postcodeController = TextEditingController();
 
   // Step 2 controllers
   final _gmcController = TextEditingController();
@@ -44,7 +48,10 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
   final _emailFocus = FocusNode();
   final _phoneFocus = FocusNode();
   final _passwordFocus = FocusNode();
-  final _addressFocus = FocusNode();
+  final _addressLine1Focus = FocusNode();
+  final _addressLine2Focus = FocusNode();
+  final _townFocus = FocusNode();
+  final _postcodeFocus = FocusNode();
   final _gmcFocus = FocusNode();
   final _yearsFocus = FocusNode();
   final _consultationFeeFocus = FocusNode();
@@ -65,7 +72,10 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _addressController.dispose();
+    _addressLine1Controller.dispose();
+    _addressLine2Controller.dispose();
+    _townController.dispose();
+    _postcodeController.dispose();
     _gmcController.dispose();
     _yearsController.dispose();
     _consultationFeeController.dispose();
@@ -76,7 +86,10 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
     _emailFocus.dispose();
     _phoneFocus.dispose();
     _passwordFocus.dispose();
-    _addressFocus.dispose();
+    _addressLine1Focus.dispose();
+    _addressLine2Focus.dispose();
+    _townFocus.dispose();
+    _postcodeFocus.dispose();
     _gmcFocus.dispose();
     _yearsFocus.dispose();
     _consultationFeeFocus.dispose();
@@ -148,7 +161,12 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text,
-      homeAddress: _addressController.text.trim(),
+      homeAddress: AddressUtils.formatAddress(
+        line1: _addressLine1Controller.text.trim(),
+        line2: _addressLine2Controller.text.trim(),
+        town: _townController.text.trim(),
+        postcode: _postcodeController.text.trim(),
+      ),
       gmcNumber: _gmcController.text.trim().replaceAll(RegExp(r'\s'), ''),
       specialisations: _selectedSpecialisations,
       yearsOfExperience: int.parse(_yearsController.text.trim()),
@@ -337,19 +355,57 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
               controller: _passwordController,
               focusNode: _passwordFocus,
               onFieldSubmitted: (_) =>
-                  FocusScope.of(context).requestFocus(_addressFocus),
+                  FocusScope.of(context).requestFocus(_addressLine1Focus),
               validator: ValidationUtils.validatePassword,
             ),
             const SizedBox(height: 16),
             AppTextField(
-              controller: _addressController,
-              focusNode: _addressFocus,
-              label: 'Home / Base Address',
-              hintText: 'Full address',
+              controller: _addressLine1Controller,
+              focusNode: _addressLine1Focus,
+              label: 'Address line 1',
+              hintText: 'House number and street',
               icon: Icons.home_outlined,
               keyboardType: TextInputType.streetAddress,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) =>
+                  FocusScope.of(context).requestFocus(_addressLine2Focus),
+              validator: ValidationUtils.validateAddressLine1,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _addressLine2Controller,
+              focusNode: _addressLine2Focus,
+              label: 'Address line 2 (optional)',
+              hintText: 'Flat, building, etc.',
+              icon: Icons.apartment_outlined,
+              keyboardType: TextInputType.streetAddress,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) =>
+                  FocusScope.of(context).requestFocus(_townFocus),
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _townController,
+              focusNode: _townFocus,
+              label: 'Town / City',
+              hintText: 'e.g. London',
+              icon: Icons.location_city_outlined,
+              keyboardType: TextInputType.streetAddress,
+              textInputAction: TextInputAction.next,
+              onFieldSubmitted: (_) =>
+                  FocusScope.of(context).requestFocus(_postcodeFocus),
+              validator: ValidationUtils.validateTown,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _postcodeController,
+              focusNode: _postcodeFocus,
+              label: 'Postcode',
+              hintText: 'e.g. SW1A 1AA',
+              icon: Icons.markunread_mailbox_outlined,
+              keyboardType: TextInputType.streetAddress,
               textInputAction: TextInputAction.done,
-              validator: ValidationUtils.validateAddress,
+              validator: ValidationUtils.validateUkPostcode,
               onFieldSubmitted: (_) {
                 FocusScope.of(context).unfocus();
                 WidgetsBinding.instance.addPostFrameCallback((_) {

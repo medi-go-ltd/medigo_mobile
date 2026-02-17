@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/features/home/doctor/doctor_bookings_screen.dart';
+import 'package:medigo_mobile/features/home/doctor/doctor_appointments_screen.dart';
+import 'package:medigo_mobile/features/home/doctor/doctor_earnings_screen.dart';
 import 'package:medigo_mobile/features/home/doctor/doctor_history_screen.dart';
-import 'package:medigo_mobile/features/home/doctor/doctor_payments_screen.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/doctor_bottom_nav_bar.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/doctor_profile_card.dart';
 import 'package:medigo_mobile/features/home/doctor/widgets/doctor_sliver_app_bar.dart';
@@ -83,11 +83,11 @@ class _DoctorHomeScreenState extends State<DoctorHomeScreen> {
       case 0:
         return _buildHomeContent();
       case 1:
-        return const DoctorBookingsScreen();
+        return const DoctorAppointmentsScreen();
       case 2:
         return const DoctorHistoryScreen();
       case 3:
-        return const DoctorPaymentsScreen();
+        return const DoctorEarningsScreen();
       default:
         return _buildHomeContent();
     }

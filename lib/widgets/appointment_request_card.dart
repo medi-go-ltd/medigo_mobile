@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:medigo_mobile/models/booking_request.dart';
+import 'package:medigo_mobile/models/appointment_request.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 
-class BookingRequestCard extends StatelessWidget {
-  const BookingRequestCard({
+class AppointmentRequestCard extends StatelessWidget {
+  const AppointmentRequestCard({
     super.key,
     required this.request,
     required this.onAccept,
     required this.onDecline,
   });
 
-  final BookingRequest request;
+  final AppointmentRequest request;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
 
