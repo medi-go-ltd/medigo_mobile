@@ -140,7 +140,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           const BottomNavigationBarItem(
             icon: Icon(Icons.payment_outlined),
             activeIcon: Icon(Icons.payment),
-            label: 'Earnings',
+            label: 'Payments',
           ),
         ],
       ),

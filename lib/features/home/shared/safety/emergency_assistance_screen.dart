@@ -43,7 +43,7 @@ class _EmergencyAssistanceScreenState extends State<EmergencyAssistanceScreen> {
   String get _emergencyNumber =>
       _customEmergencyNumber?.trim().isNotEmpty == true
           ? _customEmergencyNumber!
-          : '911';
+          : '999';
 
   Future<void> _callEmergency() async {
     final uri = Uri(scheme: 'tel', path: _emergencyNumber);
@@ -127,7 +127,7 @@ class _EmergencyAssistanceScreenState extends State<EmergencyAssistanceScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     decoration: InputDecoration(
-                      hintText: 'e.g. 911, 112, or your local number',
+                      hintText: 'e.g. 999, 112, or your local number',
                       hintStyle: AppTypography.bodySecondary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
