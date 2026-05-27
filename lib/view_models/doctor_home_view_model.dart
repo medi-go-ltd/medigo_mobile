@@ -10,14 +10,12 @@ import 'package:medigo_mobile/models/visit_notes.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-/// One data point for earnings-over-time charts (e.g. per day).
 class DayEarnings {
   final DateTime date;
   final double amount;
   const DayEarnings(this.date, this.amount);
 }
 
-/// Filter for earnings history period.
 enum EarningsHistoryPeriod { all, thisMonth, last3Months }
 
 class DoctorHomeViewModel extends ChangeNotifier {
@@ -99,24 +97,28 @@ class DoctorHomeViewModel extends ChangeNotifier {
   bool get isOnline => _isOnline;
   DoctorProfile get profile => _profile;
   List<AppointmentRequest> get liveRequests => List.unmodifiable(_liveRequests);
-  List<Appointment> get activeAppointments => List.unmodifiable(_activeAppointments);
-  List<Appointment> get pastAppointments => List.unmodifiable(_pastAppointments);
-  List<EarningsTransaction> get earningsHistory => List.unmodifiable(_earningsHistory);
+  List<Appointment> get activeAppointments =>
+      List.unmodifiable(_activeAppointments);
+  List<Appointment> get pastAppointments =>
+      List.unmodifiable(_pastAppointments);
+  List<EarningsTransaction> get earningsHistory =>
+      List.unmodifiable(_earningsHistory);
 
-  double get totalEarnings => _earningsHistory.fold(0, (sum, t) => sum + t.amount);
+  double get totalEarnings =>
+      _earningsHistory.fold(0, (sum, t) => sum + t.amount);
 
-  /// Sum of earnings from active (confirmed) appointments.
   double get upcomingEarnings =>
       _activeAppointments.fold(0.0, (sum, a) => sum + a.earnings);
 
-  /// Earnings grouped by day in [start, end] (inclusive). One entry per day; amount 0 if none.
   List<DayEarnings> earningsByDay(DateTime start, DateTime end) {
     final startDay = DateTime(start.year, start.month, start.day);
     final endDay = DateTime(end.year, end.month, end.day);
     final days = <DateTime, double>{};
-    for (var d = startDay;
-        !d.isAfter(endDay);
-        d = d.add(const Duration(days: 1))) {
+    for (
+      var d = startDay;
+      !d.isAfter(endDay);
+      d = d.add(const Duration(days: 1))
+    ) {
       days[d] = 0;
     }
     for (final t in _earningsHistory) {
@@ -129,7 +131,6 @@ class DoctorHomeViewModel extends ChangeNotifier {
     return sorted.map((d) => DayEarnings(d, days[d]!)).toList();
   }
 
-  /// Earnings grouped by description (e.g. "Consultation", "Consultation + Call-out").
   Map<String, double> get earningsByDescription {
     final map = <String, double>{};
     for (final t in _earningsHistory) {
@@ -138,7 +139,6 @@ class DoctorHomeViewModel extends ChangeNotifier {
     return map;
   }
 
-  /// Average earnings per day over the last [n] days (from earnings history).
   double averageDailyEarningsLastNDays(int n) {
     if (n <= 0) return 0;
     final end = DateTime.now();
@@ -148,17 +148,17 @@ class DoctorHomeViewModel extends ChangeNotifier {
     return total / n;
   }
 
-  /// Simple projection: average daily * remaining days in current week (today included).
   double get projectedEarningsThisWeek {
     final avg = averageDailyEarningsLastNDays(7);
     final now = DateTime.now();
-    final weekday = now.weekday; // 1 = Monday, 7 = Sunday
-    final daysLeftInWeek = 8 - weekday; // including today
+    final weekday = now.weekday;
+    final daysLeftInWeek = 8 - weekday;
     return avg * daysLeftInWeek.clamp(0, 7);
   }
 
-  /// Earnings history filtered by period.
-  List<EarningsTransaction> earningsHistoryFiltered(EarningsHistoryPeriod period) {
+  List<EarningsTransaction> earningsHistoryFiltered(
+    EarningsHistoryPeriod period,
+  ) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     switch (period) {
@@ -173,7 +173,6 @@ class DoctorHomeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Total of filtered earnings history (for summary line).
   double totalEarningsInFiltered(EarningsHistoryPeriod period) {
     return earningsHistoryFiltered(period).fold(0.0, (s, t) => s + t.amount);
   }
@@ -192,20 +191,27 @@ class DoctorHomeViewModel extends ChangeNotifier {
   void acceptAppointment(String id) {
     final req = _liveRequests.firstWhere((r) => r.id == id);
     _liveRequests.removeWhere((r) => r.id == id);
-    _activeAppointments.add(Appointment(
-      id: req.id,
-      patientName: req.patientName,
-      patientLocation: req.patientLocation,
-      reasonForVisit: req.reasonForVisit,
-      earnings: req.estimatedEarnings,
-      date: req.requestedAt,
-      status: AppointmentStatus.active,
-    ));
+    _activeAppointments.add(
+      Appointment(
+        id: req.id,
+        patientName: req.patientName,
+        patientLocation: req.patientLocation,
+        reasonForVisit: req.reasonForVisit,
+        earnings: req.estimatedEarnings,
+        date: req.requestedAt,
+        status: AppointmentStatus.active,
+      ),
+    );
     notifyListeners();
   }
 
   void declineAppointment(String id) {
     _liveRequests.removeWhere((r) => r.id == id);
+    notifyListeners();
+  }
+
+  void addLiveRequest(AppointmentRequest request) {
+    _liveRequests.insert(0, request);
     notifyListeners();
   }
 
@@ -217,12 +223,18 @@ class DoctorHomeViewModel extends ChangeNotifier {
     return _completedVisitNotes[appointmentId];
   }
 
-  Future<String?> addScreenshotToNotes(String appointmentId, String sourcePath) async {
+  Future<String?> addScreenshotToNotes(
+    String appointmentId,
+    String sourcePath,
+  ) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final visitDir = Directory(p.join(dir.path, 'visit_notes', appointmentId));
+      final visitDir = Directory(
+        p.join(dir.path, 'visit_notes', appointmentId),
+      );
       if (!await visitDir.exists()) await visitDir.create(recursive: true);
-      final name = '${DateTime.now().millisecondsSinceEpoch}${p.extension(sourcePath)}';
+      final name =
+          '${DateTime.now().millisecondsSinceEpoch}${p.extension(sourcePath)}';
       final destPath = p.join(visitDir.path, name);
       await File(sourcePath).copy(destPath);
       final notes = getVisitNotes(appointmentId);
@@ -263,9 +275,7 @@ class DoctorHomeViewModel extends ChangeNotifier {
 
   void addFlag(String appointmentId, AppointmentFlag flag) {
     final notes = getVisitNotes(appointmentId);
-    _visitNotes[appointmentId] = notes.copyWith(
-      flags: [...notes.flags, flag],
-    );
+    _visitNotes[appointmentId] = notes.copyWith(flags: [...notes.flags, flag]);
     notifyListeners();
   }
 
@@ -277,22 +287,28 @@ class DoctorHomeViewModel extends ChangeNotifier {
       _visitNotes.remove(id);
     }
     _activeAppointments.removeWhere((x) => x.id == id);
-    _pastAppointments.insert(0, Appointment(
-      id: a.id,
-      patientName: a.patientName,
-      patientLocation: a.patientLocation,
-      reasonForVisit: a.reasonForVisit,
-      earnings: a.earnings,
-      date: DateTime.now(),
-      status: AppointmentStatus.completed,
-    ));
-    _earningsHistory.insert(0, EarningsTransaction(
-      id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
-      patientName: a.patientName,
-      amount: a.earnings,
-      date: DateTime.now(),
-      description: 'Consultation',
-    ));
+    _pastAppointments.insert(
+      0,
+      Appointment(
+        id: a.id,
+        patientName: a.patientName,
+        patientLocation: a.patientLocation,
+        reasonForVisit: a.reasonForVisit,
+        earnings: a.earnings,
+        date: DateTime.now(),
+        status: AppointmentStatus.completed,
+      ),
+    );
+    _earningsHistory.insert(
+      0,
+      EarningsTransaction(
+        id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
+        patientName: a.patientName,
+        amount: a.earnings,
+        date: DateTime.now(),
+        description: 'Consultation',
+      ),
+    );
     notifyListeners();
   }
 

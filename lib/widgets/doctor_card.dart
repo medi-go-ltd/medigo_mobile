@@ -25,15 +25,11 @@ class DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Dismissible(
-        key: Key(doctor.id),
-        direction: DismissDirection.down,
-        onDismissed: (_) => onDismissed(),
-        child: Container(
+    return Dismissible(
+      key: Key(doctor.id),
+      direction: DismissDirection.down,
+      onDismissed: (_) => onDismissed(),
+      child: Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -152,7 +148,6 @@ class DoctorCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

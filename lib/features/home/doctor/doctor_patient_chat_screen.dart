@@ -114,7 +114,7 @@ class _DoctorPatientChatScreenState extends State<DoctorPatientChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, i) {
                 final m = _messages[i];
-                return ChatBubble(text: m.text, isFromDoctor: m.isFromDoctor);
+                return ChatBubble(text: m.text, isOutgoing: m.isFromDoctor);
               },
             ),
           ),

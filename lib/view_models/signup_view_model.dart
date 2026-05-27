@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/config/app_config.dart';
 import 'package:medigo_mobile/models/doctor_registration_request.dart';
+import 'package:medigo_mobile/models/patient_registration_request.dart';
 import 'package:medigo_mobile/repositories/auth_repository.dart';
 import 'package:medigo_mobile/repositories/i_auth_repository.dart';
 import 'package:medigo_mobile/repositories/mock_auth_repository.dart';
@@ -41,6 +42,37 @@ class SignupViewModel extends ChangeNotifier {
       notifyListeners();
 
       final response = await _authRepository.registerDoctor(request);
+
+      final token = response.user.token ?? '';
+      if (_authViewModel != null && token.isNotEmpty) {
+        await _authViewModel.login(response.user, token);
+      }
+
+      _status = SignupStatus.success;
+      _errorMessage = null;
+      notifyListeners();
+
+      return true;
+    } on AppException catch (e) {
+      _status = SignupStatus.error;
+      _errorMessage = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = SignupStatus.error;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> registerPatient(PatientRegistrationRequest request) async {
+    try {
+      _status = SignupStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      final response = await _authRepository.registerPatient(request);
 
       final token = response.user.token ?? '';
       if (_authViewModel != null && token.isNotEmpty) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/upload_image_preview.dart';
 
 class MultiFileUploadField extends StatelessWidget {
   const MultiFileUploadField({
@@ -152,6 +153,7 @@ class MultiFileUploadField extends StatelessWidget {
   }
 
   Widget _buildFileChip(String path, int index) {
+    final isImage = isImageFilePath(path); // includes extensionless image_picker paths
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -161,11 +163,14 @@ class MultiFileUploadField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.insert_drive_file_outlined,
-            color: AppColors.primary,
-            size: 18,
-          ),
+          if (isImage)
+            UploadImagePreview(filePath: path, size: 44, borderRadius: 8)
+          else
+            const Icon(
+              Icons.insert_drive_file_outlined,
+              color: AppColors.primary,
+              size: 18,
+            ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/features/patient/appointments/patient_appointments_screen.dart';
+import 'package:medigo_mobile/features/patient/history/patient_history_screen.dart';
+import 'package:medigo_mobile/features/patient/payments/patient_payments_screen.dart';
+import 'package:medigo_mobile/models/doctor.dart';
+import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/patient_home_view_model.dart';
 import 'package:medigo_mobile/widgets/doctor_card.dart';
@@ -20,57 +25,119 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = context.read<PatientHomeViewModel>();
-      viewModel.initialize();
+      context.read<PatientHomeViewModel>().initialize();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        setState(() => _currentIndex = 0);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: SafeArea(child: _buildBody()),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildMapHome();
+      case 1:
+        return const PatientAppointmentsScreen();
+      case 2:
+        return const PatientHistoryScreen();
+      case 3:
+        return const PatientPaymentsScreen();
+      default:
+        return _buildMapHome();
+    }
+  }
+
+  Widget _buildMapHome() {
     final viewModel = context.watch<PatientHomeViewModel>();
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const PatientHomeHeader(),
-            Expanded(
-              child: Stack(
-                children: [
-                  PatientMapWidget(
-                    viewModel: viewModel,
-                    onMapCreated: (controller) {
-                      viewModel.setMapController(controller);
-                    },
-                    onMapTap: () {
-                      viewModel.clearSelection();
-                    },
-                    bottomPadding: viewModel.selectedDoctor != null ? 280 : 100,
-                  ),
-                  if (viewModel.selectedDoctor != null)
-                    DoctorCard(
-                      doctor: viewModel.selectedDoctor!,
-                      routeInfo: viewModel.routeInfo,
-                      selectedTravelMode: viewModel.selectedTravelMode,
-                      onTravelModeChanged: (mode) async {
-                        viewModel.setTravelMode(mode);
-                        await viewModel.updateRouteForSelectedDoctor();
-                      },
-                      onDismissed: () {
-                        viewModel.clearSelection();
-                      },
-                      onBookNow: () {
-                        // TODO: Handle book now
-                      },
-                    ),
-                ],
+    return Column(
+      children: [
+        const PatientHomeHeader(),
+        Expanded(
+          child: Stack(
+            children: [
+              PatientMapWidget(
+                viewModel: viewModel,
+                onMapCreated: viewModel.setMapController,
+                onMapTap: viewModel.clearSelection,
+                bottomPadding: viewModel.selectedDoctor != null ? 400 : 100,
               ),
-            ),
-          ],
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                      child: _buildFindNearestButton(viewModel),
+                    ),
+                    if (viewModel.selectedDoctor != null)
+                      DoctorCard(
+                        doctor: viewModel.selectedDoctor!,
+                        routeInfo: viewModel.routeInfo,
+                        selectedTravelMode: viewModel.selectedTravelMode,
+                        onTravelModeChanged: (mode) async {
+                          viewModel.setTravelMode(mode);
+                          await viewModel.updateRouteForSelectedDoctor();
+                        },
+                        onDismissed: viewModel.clearSelection,
+                        onBookNow: () => _startBooking(
+                          viewModel.selectedDoctor!,
+                          isNearestDoctor: false,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildFindNearestButton(PatientHomeViewModel viewModel) {
+    return ElevatedButton.icon(
+      onPressed: viewModel.nearestAvailableDoctor == null
+          ? null
+          : () => _startBooking(
+              viewModel.nearestAvailableDoctor!,
+              isNearestDoctor: true,
+            ),
+      icon: const Icon(Icons.near_me),
+      label: const Text('Find Nearest Available Doctor'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.surface,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  void _startBooking(Doctor doctor, {required bool isNearestDoctor}) {
+    Navigator.of(context).pushNamed(
+      AppRoutes.patientBooking,
+      arguments: PatientBookingArguments(
+        doctor: doctor,
+        isNearestDoctor: isNearestDoctor,
+      ),
     );
   }
 
@@ -88,11 +155,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
@@ -105,39 +168,23 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
-        items: [
+        items: const [
           BottomNavigationBarItem(
-            icon: _currentIndex == 0
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Icon(Icons.home),
-                    ],
-                  )
-                : const Icon(Icons.home_outlined),
-            activeIcon: const Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_outlined),
             activeIcon: Icon(Icons.calendar_today),
-            label: 'Appointments',
+            label: 'Bookings',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.history_outlined),
             activeIcon: Icon(Icons.history),
             label: 'History',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.payment_outlined),
             activeIcon: Icon(Icons.payment),
             label: 'Payments',

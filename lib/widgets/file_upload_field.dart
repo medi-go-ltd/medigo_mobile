@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/upload_image_preview.dart';
 
 class FileUploadField extends StatelessWidget {
   const FileUploadField({
@@ -11,6 +12,7 @@ class FileUploadField extends StatelessWidget {
     this.validator,
     this.source = ImageSource.gallery,
     this.acceptCamera = true,
+    this.previewSize = 56,
   });
 
   final String label;
@@ -19,6 +21,7 @@ class FileUploadField extends StatelessWidget {
   final String? Function(String?)? validator;
   final ImageSource source;
   final bool acceptCamera;
+  final double previewSize;
 
   Future<void> _pickFile(BuildContext context) async {
     try {
@@ -72,9 +75,16 @@ class FileUploadField extends StatelessWidget {
     }
   }
 
+  String _fileName(String path) {
+    final name = path.split('/').last;
+    return name.length > 40 ? '${name.substring(0, 37)}...' : name;
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasFile = filePath != null && filePath!.isNotEmpty;
+    final showImagePreview = hasFile && isImageFilePath(filePath!);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -95,29 +105,55 @@ class FileUploadField extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(
-                  hasFile ? Icons.check_circle : Icons.upload_file_outlined,
-                  color: hasFile ? AppColors.primary : AppColors.textSecondary,
-                  size: 28,
-                ),
+                if (showImagePreview)
+                  UploadImagePreview(
+                    filePath: filePath!,
+                    size: previewSize,
+                  )
+                else
+                  Icon(
+                    hasFile ? Icons.check_circle : Icons.upload_file_outlined,
+                    color:
+                        hasFile ? AppColors.primary : AppColors.textSecondary,
+                    size: 28,
+                  ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    hasFile
-                        ? (filePath!.split('/').last.length > 40
-                            ? '${filePath!.split('/').last.substring(0, 37)}...'
-                            : filePath!.split('/').last)
-                        : 'Tap to upload',
-                    style: AppTypography.body.copyWith(
-                      color: hasFile
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        hasFile
+                            ? (showImagePreview
+                                ? 'Photo selected'
+                                : _fileName(filePath!))
+                            : 'Tap to upload',
+                        style: AppTypography.body.copyWith(
+                          color: hasFile
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          fontWeight:
+                              hasFile ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                      if (hasFile)
+                        Text(
+                          showImagePreview
+                              ? 'Tap to change photo'
+                              : 'Tap to change file',
+                          style: AppTypography.bodySecondary.copyWith(
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 if (hasFile)
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     onPressed: () => onFileSelected(''),
                   ),
               ],
