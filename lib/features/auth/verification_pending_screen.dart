@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
+import 'package:medigo_mobile/models/user_role.dart';
 import 'package:provider/provider.dart';
 
 class VerificationPendingScreen extends StatelessWidget {
@@ -65,12 +66,28 @@ class VerificationPendingScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        _buildCheckList(),
+        _buildCheckList(context),
       ],
     );
   }
 
-  Widget _buildCheckList() {
+  Widget _buildCheckList(BuildContext context) {
+    final user = context.watch<AuthViewModel>().user;
+    final isPatient = user?.role == UserRole.patient;
+
+    final items = isPatient
+        ? [
+            'Email verification',
+            'Address verification',
+            'Photo ID verification',
+          ]
+        : [
+            'GMC number validation',
+            'Medical qualifications and certificates',
+            'Photo ID verification',
+            'Enhanced DBS check',
+          ];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -88,10 +105,7 @@ class VerificationPendingScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _buildCheckItem('GMC number validation'),
-          _buildCheckItem('Medical qualifications and certificates'),
-          _buildCheckItem('Photo ID verification'),
-          _buildCheckItem('Enhanced DBS check'),
+          ...items.map(_buildCheckItem),
           const SizedBox(height: 16),
           Text(
             'You will be notified via email once your account has been approved.',

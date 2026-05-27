@@ -45,6 +45,9 @@ class PatientHomeViewModel extends ChangeNotifier {
   TravelMode get selectedTravelMode => _selectedTravelMode;
   bool get isLoading => _isLoading;
 
+  Doctor? get nearestAvailableDoctor =>
+      _sortedDoctors.isNotEmpty ? _sortedDoctors.first : null;
+
   Future<void> initialize() async {
     await _loadDoctorIcon();
     await _initializeLocationAndLoadDoctors();

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/utils/patient_navigation.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/login_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
 
@@ -306,8 +308,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        // Navigate to home screen after successful login
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        await navigateAfterAuth(
+          context,
+          authViewModel: context.read<AuthViewModel>(),
+        );
       }
     }
   }

@@ -12,7 +12,7 @@ void main() {
           home: const Scaffold(
             body: ChatBubble(
               text: 'Hello, world!',
-              isFromDoctor: true,
+              isOutgoing: true,
             ),
           ),
         ),
@@ -22,39 +22,40 @@ void main() {
       expect(find.text('Hello, world!'), findsOneWidget);
     });
 
-    testWidgets('displays doctor message', (WidgetTester tester) async {
+    testWidgets('outgoing messages align right', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light,
           home: const Scaffold(
             body: ChatBubble(
-              text: 'Test',
-              isFromDoctor: true,
+              text: 'My message',
+              isOutgoing: true,
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Test'), findsOneWidget);
-      expect(find.byType(ChatBubble), findsOneWidget);
+      final align = tester.widget<Align>(find.byType(Align));
+      expect(align.alignment, Alignment.centerRight);
     });
 
-    testWidgets('displays patient message', (WidgetTester tester) async {
+    testWidgets('incoming messages align left', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.light,
           home: const Scaffold(
             body: ChatBubble(
-              text: 'Thanks!',
-              isFromDoctor: false,
+              text: 'Their message',
+              isOutgoing: false,
             ),
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Thanks!'), findsOneWidget);
+      final align = tester.widget<Align>(find.byType(Align));
+      expect(align.alignment, Alignment.centerLeft);
     });
   });
 }

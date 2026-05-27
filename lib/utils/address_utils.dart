@@ -3,7 +3,6 @@ class AddressUtils {
     r'^[A-Za-z]{1,2}[0-9][0-9A-Za-z]?\s*[0-9][A-Za-z]{2}$',
   );
 
-  /// Formats structured address fields into a single UK-standard address string.
   static String formatAddress({
     required String line1,
     String? line2,
@@ -19,8 +18,6 @@ class AddressUtils {
     return parts.join(', ');
   }
 
-  /// Parses an existing address string into structured fields.
-  /// Returns (line1, line2?, town, postcode) - line2 may be empty.
   static ({String line1, String line2, String town, String postcode})
   parseAddress(String address) {
     final trimmed = address.trim();

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:medigo_mobile/models/doctor_registration_request.dart';
 import 'package:medigo_mobile/models/login_request.dart';
 import 'package:medigo_mobile/models/login_response.dart';
+import 'package:medigo_mobile/models/patient_registration_request.dart';
 import 'package:medigo_mobile/repositories/i_auth_repository.dart';
 import 'package:medigo_mobile/utils/app_exception.dart';
 
@@ -28,6 +29,32 @@ class MockAuthRepository implements IAuthRepository {
         'updatedAt': DateTime.now().toIso8601String(),
       },
       'message': 'Registration successful. Your account is pending verification.',
+      'success': true,
+    });
+  }
+
+  @override
+  Future<LoginResponse> registerPatient(
+    PatientRegistrationRequest request,
+  ) async {
+    await Future.delayed(_delay);
+
+    return LoginResponse.fromJson({
+      'user': {
+        'id': 'patient-new-${DateTime.now().millisecondsSinceEpoch}',
+        'email': request.email,
+        'firstName': request.firstName,
+        'lastName': request.lastName,
+        'phoneNumber': request.phoneNumber,
+        'role': 'patient',
+        'verificationStatus': 'pending',
+        'profileImageUrl': null,
+        'token': 'mock-jwt-patient-${DateTime.now().millisecondsSinceEpoch}',
+        'createdAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      'message':
+          'Registration successful. Your account is pending verification.',
       'success': true,
     });
   }
