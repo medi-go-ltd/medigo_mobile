@@ -5,6 +5,7 @@ import 'package:medigo_mobile/models/appointment_request.dart';
 import 'package:medigo_mobile/models/doctor.dart';
 import 'package:medigo_mobile/models/patient_booking.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
+import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
 
 class PatientBookingViewModel extends ChangeNotifier {
   PatientBookingViewModel({DoctorHomeViewModel? doctorHomeViewModel})
@@ -52,7 +53,7 @@ class PatientBookingViewModel extends ChangeNotifier {
     BookingFor? bookingFor,
     String? otherPersonName,
     TriageAnswers? triage,
-    String? bodyArea,
+    List<String>? bodyAreas,
     String? description,
     PaymentMethodType? paymentMethod,
   }) {
@@ -61,7 +62,7 @@ class PatientBookingViewModel extends ChangeNotifier {
       bookingFor: bookingFor,
       otherPersonName: otherPersonName,
       triage: triage,
-      bodyArea: bodyArea,
+      bodyAreas: bodyAreas,
       description: description,
       paymentMethod: paymentMethod,
     );
@@ -105,7 +106,9 @@ class PatientBookingViewModel extends ChangeNotifier {
 
   String _buildReasonForVisit(PatientBooking booking) {
     final parts = <String>[];
-    if (booking.bodyArea != null) parts.add('Area: ${booking.bodyArea}');
+    if (booking.bodyAreas.isNotEmpty) {
+      parts.add('Areas: ${BodyDiagramWidget.formatAreas(booking.bodyAreas)}');
+    }
     if (booking.description.isNotEmpty) parts.add(booking.description);
     if (booking.triage.isUrgent) parts.add('URGENT triage flagged');
     return parts.isEmpty ? 'Consultation requested' : parts.join(' – ');

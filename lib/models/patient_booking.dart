@@ -60,7 +60,7 @@ class PatientBooking {
   final BookingFor bookingFor;
   final String? otherPersonName;
   final TriageAnswers triage;
-  final String? bodyArea;
+  final List<String>? _bodyAreas;
   final String description;
   final PaymentMethodType paymentMethod;
   final double amount;
@@ -71,13 +71,15 @@ class PatientBooking {
   final String? review;
   final bool isNearestDoctor;
 
+  List<String> get bodyAreas => _bodyAreas ?? const [];
+
   PatientBooking({
     required this.id,
     required this.doctor,
     this.bookingFor = BookingFor.myself,
     this.otherPersonName,
     this.triage = const TriageAnswers(),
-    this.bodyArea,
+    List<String>? bodyAreas,
     this.description = '',
     this.paymentMethod = PaymentMethodType.debitCard,
     required this.amount,
@@ -87,7 +89,7 @@ class PatientBooking {
     this.rating,
     this.review,
     this.isNearestDoctor = false,
-  });
+  }) : _bodyAreas = bodyAreas ?? const [];
 
   PatientBooking copyWith({
     String? id,
@@ -95,7 +97,7 @@ class PatientBooking {
     BookingFor? bookingFor,
     String? otherPersonName,
     TriageAnswers? triage,
-    String? bodyArea,
+    List<String>? bodyAreas,
     String? description,
     PaymentMethodType? paymentMethod,
     double? amount,
@@ -112,7 +114,7 @@ class PatientBooking {
       bookingFor: bookingFor ?? this.bookingFor,
       otherPersonName: otherPersonName ?? this.otherPersonName,
       triage: triage ?? this.triage,
-      bodyArea: bodyArea ?? this.bodyArea,
+      bodyAreas: bodyAreas ?? this.bodyAreas,
       description: description ?? this.description,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       amount: amount ?? this.amount,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/models/patient_booking.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
 
 class PatientVisitHistoryDetailScreen extends StatelessWidget {
   const PatientVisitHistoryDetailScreen({super.key, required this.booking});
@@ -60,11 +61,13 @@ class PatientVisitHistoryDetailScreen extends StatelessWidget {
                   label: 'Appointment for',
                   value: _appointmentForLabel(booking),
                 ),
-                if (booking.bodyArea != null)
+                if (booking.bodyAreas.isNotEmpty)
                   _InfoTile(
                     icon: Icons.accessibility_new_outlined,
-                    label: 'Area of concern',
-                    value: booking.bodyArea!,
+                    label: booking.bodyAreas.length == 1
+                        ? 'Area of concern'
+                        : 'Areas of concern',
+                    value: BodyDiagramWidget.formatAreas(booking.bodyAreas),
                   ),
                 if (booking.description.isNotEmpty)
                   _InfoTile(
