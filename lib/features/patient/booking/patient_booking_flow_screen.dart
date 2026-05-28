@@ -29,7 +29,7 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   BookingFor _bookingFor = BookingFor.myself;
   final _otherNameController = TextEditingController();
   TriageAnswers _triage = const TriageAnswers();
-  String? _bodyArea;
+  final Set<String> _bodyAreas = {};
   final _descriptionController = TextEditingController();
   PaymentMethodType _paymentMethod = PaymentMethodType.debitCard;
 
@@ -91,7 +91,7 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
           ? _otherNameController.text.trim()
           : null,
       triage: _triage,
-      bodyArea: _bodyArea,
+      bodyAreas: _bodyAreas.toList(),
       description: _descriptionController.text.trim(),
       paymentMethod: _paymentMethod,
     );
@@ -316,12 +316,18 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   Widget _buildDescribeStep() {
     return _stepScaffold(
       title: 'Describe your issue',
-      subtitle: 'Select area of concern and describe symptoms',
+      subtitle: 'Select one or more areas of concern and describe symptoms',
       child: Column(
         children: [
           BodyDiagramWidget(
-            selectedArea: _bodyArea,
-            onAreaSelected: (area) => setState(() => _bodyArea = area),
+            selectedAreas: _bodyAreas,
+            onAreaToggled: (area) => setState(() {
+              if (_bodyAreas.contains(area)) {
+                _bodyAreas.remove(area);
+              } else {
+                _bodyAreas.add(area);
+              }
+            }),
           ),
           const SizedBox(height: 20),
           TextField(
@@ -347,9 +353,11 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
         ],
       ),
       onNext: () {
-        if (_bodyArea == null) {
+        if (_bodyAreas.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select an area of concern')),
+            const SnackBar(
+              content: Text('Please select at least one area of concern'),
+            ),
           );
           return;
         }
@@ -405,7 +413,8 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
             _summaryRow('Doctor', widget.doctor.fullName),
             _summaryRow('Specialty', widget.doctor.specialty),
             _summaryRow('For', _appointmentForLabel),
-            if (_bodyArea != null) _summaryRow('Area', _bodyArea!),
+            if (_bodyAreas.isNotEmpty)
+              _summaryRow('Areas', BodyDiagramWidget.formatAreas(_bodyAreas)),
             _summaryRow('Payment', _paymentLabel(_paymentMethod)),
             const Divider(height: 28),
             _summaryRow('Total', '£${fee.toInt()}', bold: true),

@@ -3,17 +3,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
 
 void main() {
-  testWidgets('highlights selected area on diagram and chips', (
+  testWidgets('highlights selected areas on diagram and chips', (
     tester,
   ) async {
-    String? selected = 'Chest';
+    final selected = <String>{'Chest'};
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: BodyDiagramWidget(
-            selectedArea: selected,
-            onAreaSelected: (area) => selected = area,
+            selectedAreas: selected,
+            onAreaToggled: (area) {
+              if (selected.contains(area)) {
+                selected.remove(area);
+              } else {
+                selected.add(area);
+              }
+            },
           ),
         ),
       ),
@@ -24,17 +30,48 @@ void main() {
     await tester.tap(find.text('Right Arm'));
     await tester.pump();
 
-    expect(selected, 'Right Arm');
+    expect(selected, {'Chest', 'Right Arm'});
+  });
+
+  testWidgets('tapping selected chip deselects area', (tester) async {
+    final selected = <String>{'Chest'};
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              return BodyDiagramWidget(
+                selectedAreas: selected,
+                onAreaToggled: (area) => setState(() {
+                  if (selected.contains(area)) {
+                    selected.remove(area);
+                  } else {
+                    selected.add(area);
+                  }
+                }),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Chest'));
+    await tester.pump();
+
+    expect(selected, isEmpty);
+    expect(find.text('Tap a body area or choose below'), findsOneWidget);
   });
 
   testWidgets('tap on diagram selects body region', (tester) async {
-    String? selected;
+    String? toggled;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: BodyDiagramWidget(
-            onAreaSelected: (area) => selected = area,
+            onAreaToggled: (area) => toggled = area,
           ),
         ),
       ),
@@ -53,6 +90,6 @@ void main() {
     await tester.tapAt(diagramBox.localToGlobal(localTap));
     await tester.pump();
 
-    expect(selected, 'Right Arm');
+    expect(toggled, 'Right Arm');
   });
 }

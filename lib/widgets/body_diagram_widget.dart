@@ -4,12 +4,12 @@ import 'package:medigo_mobile/theme/app_theme.dart';
 class BodyDiagramWidget extends StatelessWidget {
   const BodyDiagramWidget({
     super.key,
-    this.selectedArea,
-    required this.onAreaSelected,
+    this.selectedAreas = const {},
+    required this.onAreaToggled,
   });
 
-  final String? selectedArea;
-  final ValueChanged<String> onAreaSelected;
+  final Set<String> selectedAreas;
+  final ValueChanged<String> onAreaToggled;
 
   static const areas = [
     'Head',
@@ -23,18 +23,36 @@ class BodyDiagramWidget extends StatelessWidget {
     'Right Leg',
   ];
 
+  static int _areaSortOrder(String a, String b) {
+    final ai = areas.indexOf(a);
+    final bi = areas.indexOf(b);
+    return ai.compareTo(bi);
+  }
+
+  static String formatAreas(Iterable<String> areas) {
+    final sorted = areas.toList()..sort(_areaSortOrder);
+    return sorted.join(', ');
+  }
+
+  String get _selectionLabel {
+    if (selectedAreas.isEmpty) {
+      return 'Tap a body area or choose below';
+    }
+    return 'Selected: ${formatAreas(selectedAreas)}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasSelection = selectedAreas.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          selectedArea == null
-              ? 'Tap a body area or choose below'
-              : 'Selected: $selectedArea',
+          _selectionLabel,
           style: AppTypography.bodySecondary.copyWith(
-            color: selectedArea != null ? AppColors.primary : null,
-            fontWeight: selectedArea != null ? FontWeight.w600 : FontWeight.w500,
+            color: hasSelection ? AppColors.primary : null,
+            fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
         const SizedBox(height: 12),
@@ -57,11 +75,13 @@ class BodyDiagramWidget extends StatelessWidget {
                       details.localPosition,
                       size,
                     );
-                    if (area != null) onAreaSelected(area);
+                    if (area != null) onAreaToggled(area);
                   },
                   child: CustomPaint(
                     size: size,
-                    painter: _BodyDiagramPainter(selectedArea: selectedArea),
+                    painter: _BodyDiagramPainter(
+                      selectedAreas: selectedAreas,
+                    ),
                   ),
                 );
               },
@@ -73,11 +93,11 @@ class BodyDiagramWidget extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: areas.map((area) {
-            final selected = selectedArea == area;
+            final selected = selectedAreas.contains(area);
             return Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => onAreaSelected(area),
+                onTap: () => onAreaToggled(area),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -136,9 +156,9 @@ class _BodyPart {
 }
 
 class _BodyDiagramPainter extends CustomPainter {
-  _BodyDiagramPainter({this.selectedArea});
+  _BodyDiagramPainter({required this.selectedAreas});
 
-  final String? selectedArea;
+  final Set<String> selectedAreas;
 
   static const _baseFill = Color(0xFFB8E4EC);
   static const _baseStroke = Color(0xFF8EC5D0);
@@ -257,7 +277,7 @@ class _BodyDiagramPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final part in _parts) {
       final rect = part.bounds(size);
-      final selected = selectedArea == part.id;
+      final selected = selectedAreas.contains(part.id);
       final fill = selected
           ? AppColors.primary.withValues(alpha: 0.55)
           : _baseFill;
@@ -286,6 +306,6 @@ class _BodyDiagramPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BodyDiagramPainter oldDelegate) {
-    return oldDelegate.selectedArea != selectedArea;
+    return oldDelegate.selectedAreas != selectedAreas;
   }
 }

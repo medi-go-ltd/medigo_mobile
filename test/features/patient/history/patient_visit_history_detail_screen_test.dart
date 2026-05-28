@@ -24,7 +24,7 @@ PatientBooking _completedBooking() {
       estimatedTime: 6,
     ),
     status: PatientBookingStatus.completed,
-    bodyArea: 'Chest',
+    bodyAreas: const ['Chest'],
     description: 'Persistent cough for 3 days',
     paymentMethod: PaymentMethodType.debitCard,
     amount: 100,
