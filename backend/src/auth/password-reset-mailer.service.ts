@@ -7,7 +7,7 @@ export class PasswordResetMailerService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  sendPasswordResetEmail(email: string, token: string): void {
     const resetUrl = this.buildResetUrl(email, token);
     const nodeEnv = this.configService.get<string>('NODE_ENV') ?? 'development';
 

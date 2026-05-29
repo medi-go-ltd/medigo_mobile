@@ -142,7 +142,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (user) {
-      await this.prisma.passwordReset.deleteMany({ where: { userId: user.id } });
+      await this.prisma.passwordReset.deleteMany({
+        where: { userId: user.id },
+      });
 
       const token = generatePasswordResetToken();
       const expiresIn =
@@ -156,7 +158,7 @@ export class AuthService {
         },
       });
 
-      await this.passwordResetMailer.sendPasswordResetEmail(user.email, token);
+      this.passwordResetMailer.sendPasswordResetEmail(user.email, token);
     }
 
     return {
@@ -182,7 +184,9 @@ export class AuthService {
 
     if (!resetRecord || resetRecord.expiresAt < new Date()) {
       if (resetRecord) {
-        await this.prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+        await this.prisma.passwordReset.delete({
+          where: { id: resetRecord.id },
+        });
       }
       throw new BadRequestException('Invalid or expired reset token');
     }
@@ -200,7 +204,8 @@ export class AuthService {
 
     return {
       success: true,
-      message: 'Password updated successfully. You can sign in with your new password.',
+      message:
+        'Password updated successfully. You can sign in with your new password.',
     };
   }
 
