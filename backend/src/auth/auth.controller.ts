@@ -10,6 +10,8 @@ import { RegisterDoctorDto } from './dto/register-doctor.dto';
 import { RegisterPatientDto } from './dto/register-patient.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import {
   AuthResponseDto,
   MessageResponseDto,
@@ -52,5 +54,17 @@ export class AuthController {
   @ApiOkResponse({ type: MessageResponseDto })
   logout(@Body() body: RefreshTokenDto) {
     return this.authService.logout(body);
+  }
+
+  @Post('auth/forgot-password')
+  @ApiOkResponse({ type: MessageResponseDto })
+  forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body);
+  }
+
+  @Post('auth/reset-password')
+  @ApiOkResponse({ type: MessageResponseDto })
+  resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body);
   }
 }

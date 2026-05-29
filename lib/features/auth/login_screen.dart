@@ -189,7 +189,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 16),
                         TextButton(
                           onPressed: () {
-                            // TODO: Handle forgot password navigation
+                            Navigator.of(context).pushNamed(
+                              AppRoutes.forgotPassword,
+                              arguments: ForgotPasswordArguments(
+                                email: _emailController.text.trim().isEmpty
+                                    ? null
+                                    : _emailController.text.trim(),
+                              ),
+                            );
                           },
                           child: Text(
                             'Forgot password?',

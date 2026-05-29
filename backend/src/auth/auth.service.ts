@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -10,11 +11,16 @@ import { RegisterDoctorDto } from './dto/register-doctor.dto';
 import { RegisterPatientDto } from './dto/register-patient.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { PasswordResetMailerService } from './password-reset-mailer.service';
 import * as bcrypt from 'bcrypt';
 import { UserRole, VerificationStatus, type User } from '@prisma/client';
 import {
   expiresAtFromDuration,
+  generatePasswordResetToken,
   generateRefreshToken,
+  hashPasswordResetToken,
   hashRefreshToken,
 } from '../common/utils/token.util';
 
@@ -24,6 +30,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly passwordResetMailer: PasswordResetMailerService,
   ) {}
 
   async registerDoctor(payload: RegisterDoctorDto) {
@@ -128,6 +135,73 @@ export class AuthService {
       where: { refreshTokenHash: tokenHash },
     });
     return { success: true, message: 'Logged out' };
+  }
+
+  async forgotPassword(payload: ForgotPasswordDto) {
+    const email = payload.email.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      await this.prisma.passwordReset.deleteMany({ where: { userId: user.id } });
+
+      const token = generatePasswordResetToken();
+      const expiresIn =
+        this.configService.get<string>('PASSWORD_RESET_EXPIRES_IN') ?? '1h';
+
+      await this.prisma.passwordReset.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashPasswordResetToken(token),
+          expiresAt: expiresAtFromDuration(expiresIn),
+        },
+      });
+
+      await this.passwordResetMailer.sendPasswordResetEmail(user.email, token);
+    }
+
+    return {
+      success: true,
+      message:
+        'If an account exists for this email, you will receive password reset instructions shortly.',
+    };
+  }
+
+  async resetPassword(payload: ResetPasswordDto) {
+    const email = payload.email.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const tokenHash = hashPasswordResetToken(payload.token);
+    const resetRecord = await this.prisma.passwordReset.findFirst({
+      where: { userId: user.id, tokenHash },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!resetRecord || resetRecord.expiresAt < new Date()) {
+      if (resetRecord) {
+        await this.prisma.passwordReset.delete({ where: { id: resetRecord.id } });
+      }
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(payload.password, 10);
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      }),
+      this.prisma.passwordReset.deleteMany({ where: { userId: user.id } }),
+      this.prisma.session.deleteMany({ where: { userId: user.id } }),
+    ]);
+
+    return {
+      success: true,
+      message: 'Password updated successfully. You can sign in with your new password.',
+    };
   }
 
   private async createUserSafely(

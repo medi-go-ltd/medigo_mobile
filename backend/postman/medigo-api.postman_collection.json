@@ -82,6 +82,30 @@
           }
         },
         {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@example.com\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient@example.com\",\n  \"token\": \"<reset-token-from-email>\",\n  \"password\": \"NewSecurePass123!\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        },
+        {
           "name": "Register Patient",
           "request": {
             "method": "POST",

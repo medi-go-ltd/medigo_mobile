@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medigo_mobile/features/auth/doctor_signup_screen.dart';
+import 'package:medigo_mobile/features/auth/forgot_password_screen.dart';
+import 'package:medigo_mobile/features/auth/forgot_password_sent_screen.dart';
 import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/features/auth/patient_signup_screen.dart';
+import 'package:medigo_mobile/features/auth/reset_password_screen.dart';
 import 'package:medigo_mobile/features/auth/verification_pending_screen.dart';
 import 'package:medigo_mobile/features/home/home_screen.dart';
 import 'package:medigo_mobile/features/patient/booking/patient_booking_flow_screen.dart';
@@ -23,6 +26,9 @@ class AppRoutes {
   static const String splash = '/';
   static const String welcome = '/welcome';
   static const String login = '/login';
+  static const String forgotPassword = '/forgot-password';
+  static const String forgotPasswordSent = '/forgot-password-sent';
+  static const String resetPassword = '/reset-password';
   static const String signup = '/signup';
   static const String doctorSignup = '/doctor-signup';
   static const String verificationPending = '/verification-pending';
@@ -53,6 +59,33 @@ class AppRoutes {
         final role = args?.role ?? UserRole.patient;
         return MaterialPageRoute(
           builder: (_) => LoginScreen(role: role),
+          settings: settings,
+        );
+      case forgotPassword:
+        final args = settings.arguments as ForgotPasswordArguments?;
+        return MaterialPageRoute(
+          builder: (_) => ForgotPasswordScreen(initialEmail: args?.email),
+          settings: settings,
+        );
+      case forgotPasswordSent:
+        final args = settings.arguments as ForgotPasswordSentArguments?;
+        if (args == null) {
+          return _errorRoute(settings, 'Email required');
+        }
+        return MaterialPageRoute(
+          builder: (_) => ForgotPasswordSentScreen(email: args.email),
+          settings: settings,
+        );
+      case resetPassword:
+        final args = settings.arguments as ResetPasswordArguments?;
+        if (args == null) {
+          return _errorRoute(settings, 'Email required for password reset');
+        }
+        return MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(
+            email: args.email,
+            initialToken: args.token,
+          ),
           settings: settings,
         );
       case signup:
@@ -179,6 +212,25 @@ class LoginArguments {
   final UserRole role;
 
   const LoginArguments({required this.role});
+}
+
+class ForgotPasswordArguments {
+  final String? email;
+
+  const ForgotPasswordArguments({this.email});
+}
+
+class ForgotPasswordSentArguments {
+  final String email;
+
+  const ForgotPasswordSentArguments({required this.email});
+}
+
+class ResetPasswordArguments {
+  final String email;
+  final String? token;
+
+  const ResetPasswordArguments({required this.email, this.token});
 }
 
 class SignupArguments {
