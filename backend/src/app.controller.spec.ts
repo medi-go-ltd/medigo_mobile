@@ -8,11 +8,4 @@ describe('AppModule', () => {
     }).compile();
     expect(moduleRef).toBeDefined();
   });
-
-  beforeEach(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-    expect(moduleRef).toBeDefined();
-  });
 });
