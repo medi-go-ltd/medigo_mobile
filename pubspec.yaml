@@ -42,6 +42,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/registration/
     - assets/images/body_map/
     - assets/mock_data/
 

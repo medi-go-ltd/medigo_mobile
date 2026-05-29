@@ -10,6 +10,7 @@ import 'package:medigo_mobile/features/patient/visit/patient_active_visit_screen
 import 'package:medigo_mobile/features/patient/visit/patient_rating_screen.dart';
 import 'package:medigo_mobile/features/patient/visit/patient_waiting_screen.dart';
 import 'package:medigo_mobile/features/patient/onboarding/patient_onboarding_screen.dart';
+import 'package:medigo_mobile/features/patient/registration/patient_registration_success_screen.dart';
 import 'package:medigo_mobile/features/patient/verification/patient_verification_pending_screen.dart';
 import 'package:medigo_mobile/features/home/shared/safety/trusted_contacts_screen.dart';
 import 'package:medigo_mobile/features/splash/splash_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String doctorSignup = '/doctor-signup';
   static const String verificationPending = '/verification-pending';
+  static const String patientRegistrationSuccess = '/patient-registration-success';
   static const String patientVerificationPending = '/patient-verification-pending';
   static const String patientOnboarding = '/patient-onboarding';
   static const String home = '/home';
@@ -74,6 +76,11 @@ class AppRoutes {
       case verificationPending:
         return MaterialPageRoute(
           builder: (_) => const VerificationPendingScreen(),
+          settings: settings,
+        );
+      case patientRegistrationSuccess:
+        return MaterialPageRoute(
+          builder: (_) => const PatientRegistrationSuccessScreen(),
           settings: settings,
         );
       case patientVerificationPending:

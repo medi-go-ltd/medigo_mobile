@@ -59,6 +59,8 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
   final _radiusFocus = FocusNode();
 
   int _currentStep = 0;
+  String? _profileImagePath;
+  String? _profileImageError;
   final List<String> _selectedSpecialisations = [];
   List<String> _qualificationsFilePaths = [];
   String? _photoIdFilePath;
@@ -107,8 +109,18 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
     setState(() => _currentStep = step);
   }
 
+  bool _hasUpload(String? path) => path != null && path.isNotEmpty;
+
   bool _validateStep1() {
-    return _step1FormKey.currentState?.validate() ?? false;
+    if (!(_step1FormKey.currentState?.validate() ?? false)) return false;
+    if (!_hasUpload(_profileImagePath)) {
+      setState(() {
+        _profileImageError = 'Please upload a profile picture';
+      });
+      return false;
+    }
+    setState(() => _profileImageError = null);
+    return true;
   }
 
   bool _validateStep2() {
@@ -161,6 +173,7 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
       email: _emailController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       password: _passwordController.text,
+      profileImagePath: _profileImagePath,
       homeAddress: AddressUtils.formatAddress(
         line1: _addressLine1Controller.text.trim(),
         line2: _addressLine2Controller.text.trim(),
@@ -323,6 +336,20 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            FileUploadField(
+              label: 'Profile Picture',
+              filePath: _profileImagePath,
+              previewSize: 72,
+              required: true,
+              errorText: _profileImageError,
+              onFileSelected: (path) => setState(() {
+                _profileImagePath = path.isEmpty ? null : path;
+                if (_hasUpload(_profileImagePath)) {
+                  _profileImageError = null;
+                }
+              }),
             ),
             const SizedBox(height: 16),
             AppTextField(
