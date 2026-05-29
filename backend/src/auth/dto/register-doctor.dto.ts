@@ -26,6 +26,10 @@ export class RegisterDoctorDto {
   @MinLength(8)
   password!: string;
 
+  @IsOptional()
+  @IsString()
+  profileImagePath?: string;
+
   @IsString()
   homeAddress!: string;
 

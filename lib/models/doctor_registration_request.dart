@@ -6,6 +6,7 @@ class DoctorRegistrationRequest {
   final String email;
   final String phoneNumber;
   final String password;
+  final String? profileImagePath;
   final String homeAddress;
   final String gmcNumber;
   final List<String> specialisations;
@@ -23,6 +24,7 @@ class DoctorRegistrationRequest {
     required this.email,
     required this.phoneNumber,
     required this.password,
+    this.profileImagePath,
     required this.homeAddress,
     required this.gmcNumber,
     required this.specialisations,
@@ -42,6 +44,7 @@ class DoctorRegistrationRequest {
       'email': email,
       'phoneNumber': phoneNumber,
       'password': password,
+      'profileImagePath': profileImagePath,
       'homeAddress': homeAddress,
       'gmcNumber': gmcNumber,
       'specialisations': specialisations,

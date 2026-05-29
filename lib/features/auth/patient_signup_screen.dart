@@ -6,6 +6,7 @@ import 'package:medigo_mobile/utils/validation_utils.dart';
 import 'package:medigo_mobile/view_models/signup_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
 import 'package:medigo_mobile/widgets/app_text_field.dart';
+import 'package:medigo_mobile/widgets/field_label.dart';
 import 'package:medigo_mobile/widgets/file_upload_field.dart';
 import 'package:medigo_mobile/widgets/password_field.dart';
 import 'package:provider/provider.dart';
@@ -61,6 +62,10 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   bool _sameGenderPref = false;
   bool _locationEnabled = true;
   int _currentStep = 0;
+  bool _step1Attempted = false;
+  String? _profileImageError;
+  String? _proofOfAddressError;
+  String? _photoIdError;
 
   @override
   void dispose() {
@@ -115,17 +120,36 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     }
   }
 
+  bool _hasUpload(String? path) => path != null && path.isNotEmpty;
+
+  bool _validateStep1({bool markAttempted = true}) {
+    final formValid = _step1Key.currentState?.validate() ?? false;
+
+    final profileMissing = !_hasUpload(_profileImagePath);
+    final proofMissing = !_hasUpload(_proofOfAddressPath);
+    final photoIdMissing = !_hasUpload(_photoIdPath);
+    final showUploadErrors = markAttempted || _step1Attempted;
+
+    setState(() {
+      if (markAttempted) _step1Attempted = true;
+      if (showUploadErrors) {
+        _profileImageError =
+            profileMissing ? 'Please upload a profile picture' : null;
+        _proofOfAddressError =
+            proofMissing ? 'Please upload proof of address' : null;
+        _photoIdError = photoIdMissing ? 'Please upload photo ID' : null;
+      }
+    });
+
+    return formValid &&
+        !profileMissing &&
+        !proofMissing &&
+        !photoIdMissing;
+  }
+
   Future<void> _submit() async {
-    if (_profileImagePath == null) {
-      _showError('Please upload a profile picture');
-      return;
-    }
-    if (_proofOfAddressPath == null) {
-      _showError('Please upload proof of address');
-      return;
-    }
-    if (_photoIdPath == null) {
-      _showError('Please upload photo ID');
+    if (!_validateStep1()) {
+      _goToStep(0);
       return;
     }
 
@@ -163,7 +187,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     if (!mounted) return;
     if (success) {
       Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.patientVerificationPending,
+        AppRoutes.patientRegistrationSuccess,
         (route) => false,
       );
     } else if (vm.hasError) {
@@ -276,6 +300,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                     onFieldSubmitted: (_) =>
                         FocusScope.of(context).requestFocus(_lastNameFocus),
                     validator: ValidationUtils.validateFirstName,
+                    required: true,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -289,6 +314,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                     onFieldSubmitted: (_) =>
                         FocusScope.of(context).requestFocus(_dobFocus),
                     validator: ValidationUtils.validateLastName,
+                    required: true,
                   ),
                 ),
               ],
@@ -306,6 +332,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                   onFieldSubmitted: (_) {},
                   validator: (v) =>
                       v == null || v.isEmpty ? 'Required' : null,
+                  required: true,
                 ),
               ),
             ),
@@ -315,19 +342,31 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               'Male',
               'Non-binary',
               'Prefer not to say',
-            ], (v) => setState(() => _gender = v)),
+            ], (v) => setState(() => _gender = v), required: true),
             const SizedBox(height: 16),
-            _buildDropdown('Gender at Birth', _genderAtBirth, [
-              'Female',
-              'Male',
-            ], (v) => setState(() => _genderAtBirth = v)),
+            _buildDropdown(
+              'Gender at Birth',
+              _genderAtBirth,
+              [
+                'Female',
+                'Male',
+              ],
+              (v) => setState(() => _genderAtBirth = v),
+              required: true,
+            ),
             const SizedBox(height: 16),
             FileUploadField(
-              label: 'Profile Picture (Required)',
+              label: 'Profile Picture',
               filePath: _profileImagePath,
               previewSize: 72,
-              onFileSelected: (path) =>
-                  setState(() => _profileImagePath = path),
+              required: true,
+              errorText: _profileImageError,
+              onFileSelected: (path) => setState(() {
+                _profileImagePath = path.isEmpty ? null : path;
+                if (_hasUpload(_profileImagePath)) {
+                  _profileImageError = null;
+                }
+              }),
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -340,6 +379,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_phoneFocus),
               validator: ValidationUtils.validateEmail,
+              required: true,
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -352,6 +392,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_houseNoFocus),
               validator: ValidationUtils.validatePhone,
+              required: true,
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -363,6 +404,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_streetFocus),
               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              required: true,
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -374,6 +416,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_postcodeFocus),
               validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              required: true,
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -385,19 +428,33 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_passwordFocus),
               validator: ValidationUtils.validateUkPostcode,
+              required: true,
             ),
             const SizedBox(height: 16),
             FileUploadField(
               label: 'Proof of Address',
               filePath: _proofOfAddressPath,
-              onFileSelected: (path) =>
-                  setState(() => _proofOfAddressPath = path),
+              required: true,
+              errorText: _proofOfAddressError,
+              onFileSelected: (path) => setState(() {
+                _proofOfAddressPath = path.isEmpty ? null : path;
+                if (_hasUpload(_proofOfAddressPath)) {
+                  _proofOfAddressError = null;
+                }
+              }),
             ),
             const SizedBox(height: 16),
             FileUploadField(
               label: 'Photo ID',
               filePath: _photoIdPath,
-              onFileSelected: (path) => setState(() => _photoIdPath = path),
+              required: true,
+              errorText: _photoIdError,
+              onFileSelected: (path) => setState(() {
+                _photoIdPath = path.isEmpty ? null : path;
+                if (_hasUpload(_photoIdPath)) {
+                  _photoIdError = null;
+                }
+              }),
             ),
             const SizedBox(height: 16),
             PasswordField(
@@ -409,7 +466,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                if (_step1Key.currentState?.validate() ?? false) {
+                if (_validateStep1()) {
                   _goToStep(1);
                 }
               },
@@ -574,12 +631,13 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     String label,
     String value,
     List<String> options,
-    ValueChanged<String> onChanged,
-  ) {
+    ValueChanged<String> onChanged, {
+    bool required = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodySecondary.copyWith(fontSize: 14)),
+        FieldLabel(text: label, required: required),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           initialValue: value,

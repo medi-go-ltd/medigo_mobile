@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/field_label.dart';
 import 'package:medigo_mobile/widgets/upload_image_preview.dart';
 
 class FileUploadField extends StatelessWidget {
@@ -13,6 +14,8 @@ class FileUploadField extends StatelessWidget {
     this.source = ImageSource.gallery,
     this.acceptCamera = true,
     this.previewSize = 56,
+    this.required = false,
+    this.errorText,
   });
 
   final String label;
@@ -22,6 +25,8 @@ class FileUploadField extends StatelessWidget {
   final ImageSource source;
   final bool acceptCamera;
   final double previewSize;
+  final bool required;
+  final String? errorText;
 
   Future<void> _pickFile(BuildContext context) async {
     try {
@@ -84,11 +89,12 @@ class FileUploadField extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasFile = filePath != null && filePath!.isNotEmpty;
     final showImagePreview = hasFile && isImageFilePath(filePath!);
+    final hasError = errorText != null && errorText!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodySecondary),
+        FieldLabel(text: label, required: required),
         const SizedBox(height: 8),
         InkWell(
           onTap: () => _pickFile(context),
@@ -99,8 +105,10 @@ class FileUploadField extends StatelessWidget {
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: hasFile ? AppColors.primary : AppColors.border,
-                width: hasFile ? 1.6 : 1.4,
+                color: hasError
+                    ? Colors.red
+                    : (hasFile ? AppColors.primary : AppColors.border),
+                width: hasError || hasFile ? 1.6 : 1.4,
               ),
             ),
             child: Row(
@@ -160,7 +168,16 @@ class FileUploadField extends StatelessWidget {
             ),
           ),
         ),
-        if (validator != null && hasFile) ...[
+        if (hasError) ...[
+          const SizedBox(height: 4),
+          Text(
+            errorText!,
+            style: AppTypography.bodySecondary.copyWith(
+              color: Colors.red,
+              fontSize: 12,
+            ),
+          ),
+        ] else if (validator != null && hasFile) ...[
           const SizedBox(height: 4),
           Builder(
             builder: (ctx) {

@@ -26,7 +26,7 @@ void main() {
 
       expect(find.text('Personal Information'), findsOneWidget);
       expect(find.text('First Name'), findsWidgets);
-      expect(find.text('Profile Picture (Required)'), findsOneWidget);
+      expect(find.textContaining('Profile Picture'), findsOneWidget);
       expect(find.text('Continue'), findsOneWidget);
     });
 

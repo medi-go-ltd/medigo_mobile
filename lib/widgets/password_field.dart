@@ -9,12 +9,14 @@ class PasswordField extends StatefulWidget {
     required this.focusNode,
     required this.onFieldSubmitted,
     required this.validator,
+    this.required = true,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final void Function(String)? onFieldSubmitted;
   final String? Function(String?)? validator;
+  final bool required;
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();
@@ -33,6 +35,7 @@ class _PasswordFieldState extends State<PasswordField> {
           focusNode: widget.focusNode,
           label: 'Password',
           hintText: 'Password',
+          required: widget.required,
           icon: Icons.lock_outline,
           keyboardType: TextInputType.visiblePassword,
           textInputAction: TextInputAction.next,

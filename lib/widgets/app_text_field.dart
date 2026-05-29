@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/widgets/field_label.dart';
 
 class AppTextField extends StatelessWidget {
   const AppTextField({
@@ -16,6 +17,7 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.onFieldSubmitted,
     this.onChanged,
+    this.required = false,
   });
 
   final TextEditingController controller;
@@ -30,13 +32,14 @@ class AppTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onFieldSubmitted;
   final void Function(String)? onChanged;
+  final bool required;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.bodySecondary),
+        FieldLabel(text: label, required: required),
         const SizedBox(height: 4),
         TextFormField(
           controller: controller,
