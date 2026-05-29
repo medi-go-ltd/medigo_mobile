@@ -69,6 +69,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   bool _locationEnabled = true;
   int _currentStep = 0;
   bool _step1Attempted = false;
+  List<String> _step1IssueMessages = [];
   String? _profileImageError;
   String? _proofOfAddressError;
   String? _photoIdError;
@@ -136,15 +137,15 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   bool _hasUpload(String? path) => path != null && path.isNotEmpty;
 
   bool _validateStep1({bool markAttempted = true}) {
-    final formValid = _step1Key.currentState?.validate() ?? false;
-
     final profileMissing = !_hasUpload(_profileImagePath);
     final proofMissing = !_hasUpload(_proofOfAddressPath);
     final photoIdMissing = !_hasUpload(_photoIdPath);
     final showUploadErrors = markAttempted || _step1Attempted;
+    final issues = _collectStep1Issues();
 
     setState(() {
       if (markAttempted) _step1Attempted = true;
+      _step1IssueMessages = issues;
       if (showUploadErrors) {
         _profileImageError =
             profileMissing ? 'Please upload a profile picture' : null;
@@ -154,89 +155,121 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
       }
     });
 
-    return formValid &&
-        !profileMissing &&
-        !proofMissing &&
-        !photoIdMissing;
+    _step1Key.currentState?.validate();
+    return issues.isEmpty;
   }
 
-  String? _firstStep1IssueMessage() {
-    final checks = <String? Function()>[
-      () => ValidationUtils.validateFirstName(_firstName.text),
-      () => ValidationUtils.validateLastName(_lastName.text),
-      () => _dob.text.trim().isEmpty ? 'Date of birth is required' : null,
-      () => ValidationUtils.validateEmail(_email.text),
-      () => ValidationUtils.validatePhone(_phone.text),
-      () => _houseNo.text.trim().isEmpty ? 'House number is required' : null,
-      () => _street.text.trim().isEmpty ? 'Street is required' : null,
-      () => ValidationUtils.validateUkPostcode(_postcode.text),
-      () => ValidationUtils.validatePassword(_password.text),
-    ];
+  List<String> _collectStep1Issues() {
+    final issues = <String>[];
 
-    for (final check in checks) {
-      final message = check();
-      if (message != null) return message;
+    void add(String? message) {
+      if (message != null && message.isNotEmpty) {
+        issues.add(message);
+      }
     }
 
+    add(ValidationUtils.validateFirstName(_firstName.text));
+    add(ValidationUtils.validateLastName(_lastName.text));
+    add(_dob.text.trim().isEmpty ? 'Date of birth is required' : null);
     if (!_hasUpload(_profileImagePath)) {
-      return 'Please upload a profile picture';
+      add('Please upload a profile picture');
     }
+    add(ValidationUtils.validateEmail(_email.text));
+    add(ValidationUtils.validatePhone(_phone.text));
+    add(_houseNo.text.trim().isEmpty ? 'House number is required' : null);
+    add(_street.text.trim().isEmpty ? 'Street is required' : null);
+    add(ValidationUtils.validateUkPostcode(_postcode.text));
     if (!_hasUpload(_proofOfAddressPath)) {
-      return 'Please upload proof of address';
+      add('Please upload proof of address');
     }
     if (!_hasUpload(_photoIdPath)) {
-      return 'Please upload photo ID';
+      add('Please upload photo ID');
     }
+    add(ValidationUtils.validatePassword(_password.text));
 
-    return null;
+    return issues;
   }
 
   void _scrollToStep1Issue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      final focusChecks = <FocusNode>[
-        _firstNameFocus,
-        _lastNameFocus,
-        _dobFocus,
-        _emailFocus,
-        _phoneFocus,
-        _houseNoFocus,
-        _streetFocus,
-        _postcodeFocus,
-        _passwordFocus,
-      ];
-
-      final validators = <String? Function()>[
-        () => ValidationUtils.validateFirstName(_firstName.text),
-        () => ValidationUtils.validateLastName(_lastName.text),
-        () => _dob.text.trim().isEmpty ? 'Required' : null,
-        () => ValidationUtils.validateEmail(_email.text),
-        () => ValidationUtils.validatePhone(_phone.text),
-        () => _houseNo.text.trim().isEmpty ? 'Required' : null,
-        () => _street.text.trim().isEmpty ? 'Required' : null,
-        () => ValidationUtils.validateUkPostcode(_postcode.text),
-        () => ValidationUtils.validatePassword(_password.text),
-      ];
-
-      for (var i = 0; i < focusChecks.length; i++) {
-        if (validators[i]() != null) {
-          _scrollToFocus(
-            focusChecks[i],
-            requestFocus: focusChecks[i] != _dobFocus,
-          );
-          return;
+      bool scrollToFirstInvalid({
+        required String? Function() validate,
+        required VoidCallback scrollTo,
+      }) {
+        if (validate() != null) {
+          scrollTo();
+          return true;
         }
+        return false;
       }
 
-      final uploadKeys = [
-        if (!_hasUpload(_profileImagePath)) _profileUploadKey,
-        if (!_hasUpload(_proofOfAddressPath)) _proofUploadKey,
-        if (!_hasUpload(_photoIdPath)) _photoIdUploadKey,
-      ];
-
-      if (uploadKeys.isNotEmpty) {
-        _scrollToKey(uploadKeys.first);
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validateFirstName(_firstName.text),
+        scrollTo: () => _scrollToFocus(_firstNameFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validateLastName(_lastName.text),
+        scrollTo: () => _scrollToFocus(_lastNameFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => _dob.text.trim().isEmpty ? 'Required' : null,
+        scrollTo: () => _scrollToFocus(_dobFocus, requestFocus: false),
+      )) {
+        return;
+      }
+      if (!_hasUpload(_profileImagePath)) {
+        _scrollToKey(_profileUploadKey);
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validateEmail(_email.text),
+        scrollTo: () => _scrollToFocus(_emailFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validatePhone(_phone.text),
+        scrollTo: () => _scrollToFocus(_phoneFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => _houseNo.text.trim().isEmpty ? 'Required' : null,
+        scrollTo: () => _scrollToFocus(_houseNoFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => _street.text.trim().isEmpty ? 'Required' : null,
+        scrollTo: () => _scrollToFocus(_streetFocus),
+      )) {
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validateUkPostcode(_postcode.text),
+        scrollTo: () => _scrollToFocus(_postcodeFocus),
+      )) {
+        return;
+      }
+      if (!_hasUpload(_proofOfAddressPath)) {
+        _scrollToKey(_proofUploadKey);
+        return;
+      }
+      if (!_hasUpload(_photoIdPath)) {
+        _scrollToKey(_photoIdUploadKey);
+        return;
+      }
+      if (scrollToFirstInvalid(
+        validate: () => ValidationUtils.validatePassword(_password.text),
+        scrollTo: () => _scrollToFocus(_passwordFocus),
+      )) {
+        return;
       }
     });
   }
@@ -269,8 +302,12 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   }
 
   void _handleStep1ValidationFailure() {
-    final message = _firstStep1IssueMessage() ??
-        'Please complete all required personal information';
+    final issues = _step1IssueMessages;
+    final message = issues.isEmpty
+        ? 'Please review the highlighted fields below'
+        : issues.length == 1
+            ? issues.first
+            : '${issues.length} items need attention: ${issues.first}';
     _showError(message);
     _dismissKeyboard();
 
@@ -441,6 +478,10 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               style: AppTypography.bodySecondary,
             ),
             const SizedBox(height: 20),
+            if (_step1IssueMessages.isNotEmpty) ...[
+              _buildStep1IssueSummary(),
+              const SizedBox(height: 16),
+            ],
             Row(
               children: [
                 Expanded(
@@ -806,6 +847,58 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep1IssueSummary() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _step1IssueMessages.length == 1
+                ? 'Please fix this before continuing:'
+                : 'Please fix these ${_step1IssueMessages.length} items before continuing:',
+            style: AppTypography.body.copyWith(
+              color: Colors.red.shade900,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ..._step1IssueMessages.map(
+            (issue) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• ',
+                    style: AppTypography.body.copyWith(
+                      color: Colors.red.shade800,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      issue,
+                      style: AppTypography.body.copyWith(
+                        color: Colors.red.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
