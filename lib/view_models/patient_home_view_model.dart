@@ -23,7 +23,6 @@ class PatientHomeViewModel extends ChangeNotifier {
   StreamSubscription<Location>? _locationSubscription;
   BitmapDescriptor? _doctorIcon;
   RouteInfo? _routeInfo;
-  TravelMode _selectedTravelMode = TravelMode.driving;
   bool _isLoading = false;
 
   static Location get _defaultUserLocation => Location(
@@ -42,7 +41,6 @@ class PatientHomeViewModel extends ChangeNotifier {
   Set<Polyline> get polylines => _polylines;
   BitmapDescriptor? get doctorIcon => _doctorIcon;
   RouteInfo? get routeInfo => _routeInfo;
-  TravelMode get selectedTravelMode => _selectedTravelMode;
   bool get isLoading => _isLoading;
 
   Doctor? get nearestAvailableDoctor =>
@@ -330,7 +328,7 @@ class PatientHomeViewModel extends ChangeNotifier {
     final routeResult = await DirectionsService.getRoute(
       origin: userLatLng,
       destination: doctorLatLng,
-      mode: _selectedTravelMode,
+      mode: TravelMode.driving,
     );
 
     // Use the route points if available, otherwise fall back to straight line
@@ -371,17 +369,6 @@ class PatientHomeViewModel extends ChangeNotifier {
 
     // Zoom to show the entire route with padding
     _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 120));
-  }
-
-  Future<void> updateRouteForSelectedDoctor() async {
-    if (_selectedDoctor != null) {
-      await zoomToDoctorAndShowRoute(_selectedDoctor!);
-    }
-  }
-
-  void setTravelMode(TravelMode mode) {
-    _selectedTravelMode = mode;
-    notifyListeners();
   }
 
   @override

@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AppointmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EN_ROUTE
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  passwordHash       String
+  firstName          String
+  lastName           String
+  phoneNumber        String?
+  role               UserRole           @default(PATIENT)
+  profileImageUrl    String?
+  verificationStatus VerificationStatus @default(PENDING)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  doctor             Doctor?
+  patient            Patient?
+  sessions           Session[]
+  documents          Document[]
+}
+
+model Doctor {
+  id                      String             @id @default(cuid())
+  userId                  String             @unique
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gmcNumber               String             @unique
+  specialisations         String[]
+  yearsOfExperience       Int
+  consultationFee         Decimal            @db.Decimal(10, 2)
+  callOutFee              Decimal?           @db.Decimal(10, 2)
+  radiusKm                Decimal            @db.Decimal(8, 2)
+  homeAddress             String
+  isAvailable             Boolean            @default(true)
+  verificationStatus      VerificationStatus @default(PENDING)
+  appointments            Appointment[]
+  documents               Document[]
+}
+
+model Patient {
+  id                        String       @id @default(cuid())
+  userId                     String      @unique
+  user                       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth                DateTime
+  gender                     String
+  genderAtBirth              String
+  houseNumber                String
+  street                     String
+  postcode                   String
+  highBloodPressure          Boolean     @default(false)
+  diabetes                   Boolean     @default(false)
+  heartDisease               Boolean     @default(false)
+  asthma                     Boolean     @default(false)
+  allergies                  Boolean     @default(false)
+  allergyDetails             String?
+  currentMedications         String?
+  additionalNotes            String?
+  sameGenderDoctorPreference Boolean     @default(false)
+  locationServicesEnabled    Boolean     @default(true)
+  appointments               Appointment[]
+  documents                  Document[]
+}
+
+model Appointment {
+  id               String            @id @default(cuid())
+  patientId        String
+  patient          Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId         String?
+  doctor           Doctor?           @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  reasonForVisit   String
+  bodyAreas        String[]
+  amount           Decimal           @db.Decimal(10, 2)
+  bookingFor       String            @default("myself")
+  otherPersonName  String?
+  severeChestPain  Boolean           @default(false)
+  difficultyBreath Boolean           @default(false)
+  severePain       Boolean           @default(false)
+  unconscious      Boolean           @default(false)
+  status           AppointmentStatus @default(PENDING)
+  patientLat       Decimal?          @db.Decimal(10, 7)
+  patientLng       Decimal?          @db.Decimal(10, 7)
+  doctorEtaMinutes Int?
+  rating           Int?
+  review           String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorId    String?
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  patientId   String?
+  patient     Patient? @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  category    String
+  fileUrl     String
+  fileName    String
+  uploadedAt  DateTime @default(now())
+}

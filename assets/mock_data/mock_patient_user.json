@@ -6,6 +6,7 @@
     "lastName": "Anderson",
     "phoneNumber": "+1234567890",
     "role": "patient",
+    "gender": "Female",
     "verificationStatus": "approved",
     "profileImageUrl": null,
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC9.patient.token",

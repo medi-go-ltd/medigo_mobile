@@ -47,6 +47,7 @@ class MockAuthRepository implements IAuthRepository {
         'lastName': request.lastName,
         'phoneNumber': request.phoneNumber,
         'role': 'patient',
+        'gender': request.gender,
         'verificationStatus': 'pending',
         'profileImageUrl': null,
         'token': 'mock-jwt-patient-${DateTime.now().millisecondsSinceEpoch}',

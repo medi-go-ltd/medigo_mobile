@@ -73,7 +73,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                 viewModel: viewModel,
                 onMapCreated: viewModel.setMapController,
                 onMapTap: viewModel.clearSelection,
-                bottomPadding: viewModel.selectedDoctor != null ? 400 : 100,
+                bottomPadding: viewModel.selectedDoctor != null ? 340 : 100,
               ),
               Positioned(
                 left: 0,
@@ -91,11 +91,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       DoctorCard(
                         doctor: viewModel.selectedDoctor!,
                         routeInfo: viewModel.routeInfo,
-                        selectedTravelMode: viewModel.selectedTravelMode,
-                        onTravelModeChanged: (mode) async {
-                          viewModel.setTravelMode(mode);
-                          await viewModel.updateRouteForSelectedDoctor();
-                        },
+                        userLocation: viewModel.userLocation,
                         onDismissed: viewModel.clearSelection,
                         onBookNow: () => _startBooking(
                           viewModel.selectedDoctor!,

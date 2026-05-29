@@ -1,0 +1,76 @@
+import { AdminService } from './admin.service';
+import { UpdateVerificationDto } from './dto/update-verification.dto';
+export declare class AdminController {
+    private readonly adminService;
+    constructor(adminService: AdminService);
+    users(): import("@prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+        phoneNumber: string | null;
+        role: import("@prisma/client").$Enums.UserRole;
+        profileImageUrl: string | null;
+        verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    bookings(): import("@prisma/client").Prisma.PrismaPromise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.AppointmentStatus;
+        reasonForVisit: string;
+        bodyAreas: string[];
+        amount: import("@prisma/client/runtime/library").Decimal;
+        bookingFor: string;
+        otherPersonName: string | null;
+        severeChestPain: boolean;
+        difficultyBreath: boolean;
+        severePain: boolean;
+        unconscious: boolean;
+        patientLat: import("@prisma/client/runtime/library").Decimal | null;
+        patientLng: import("@prisma/client/runtime/library").Decimal | null;
+        review: string | null;
+        doctorEtaMinutes: number | null;
+        rating: number | null;
+        patientId: string;
+        doctorId: string | null;
+    }[]>;
+    verification(userId: string, body: UpdateVerificationDto): import("@prisma/client").Prisma.Prisma__UserClient<{
+        id: string;
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+        phoneNumber: string | null;
+        role: import("@prisma/client").$Enums.UserRole;
+        profileImageUrl: string | null;
+        verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+        createdAt: Date;
+        updatedAt: Date;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+    declineBooking(appointmentId: string): import("@prisma/client").Prisma.Prisma__AppointmentClient<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        status: import("@prisma/client").$Enums.AppointmentStatus;
+        reasonForVisit: string;
+        bodyAreas: string[];
+        amount: import("@prisma/client/runtime/library").Decimal;
+        bookingFor: string;
+        otherPersonName: string | null;
+        severeChestPain: boolean;
+        difficultyBreath: boolean;
+        severePain: boolean;
+        unconscious: boolean;
+        patientLat: import("@prisma/client/runtime/library").Decimal | null;
+        patientLng: import("@prisma/client/runtime/library").Decimal | null;
+        review: string | null;
+        doctorEtaMinutes: number | null;
+        rating: number | null;
+        patientId: string;
+        doctorId: string | null;
+    }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;
+}

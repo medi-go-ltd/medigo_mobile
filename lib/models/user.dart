@@ -8,6 +8,7 @@ class User {
   final String lastName;
   final String? phoneNumber;
   final UserRole role;
+  final String? gender;
   final String? profileImageUrl;
   final String? token;
   final DateTime? createdAt;
@@ -21,6 +22,7 @@ class User {
     required this.lastName,
     this.phoneNumber,
     required this.role,
+    this.gender,
     this.profileImageUrl,
     this.token,
     this.createdAt,
@@ -41,6 +43,7 @@ class User {
       phoneNumber:
           json['phoneNumber'] as String? ?? json['phone_number'] as String?,
       role: _parseRole(json['role'] as String?),
+      gender: json['gender'] as String? ?? json['gender_at_birth'] as String?,
       profileImageUrl:
           json['profileImageUrl'] as String? ??
           json['profile_image_url'] as String?,
@@ -72,6 +75,7 @@ class User {
       'lastName': lastName,
       'phoneNumber': phoneNumber,
       'role': role.name,
+      'gender': gender,
       'profileImageUrl': profileImageUrl,
       'token': token,
       'createdAt': createdAt?.toIso8601String(),
@@ -99,6 +103,7 @@ class User {
     String? lastName,
     String? phoneNumber,
     UserRole? role,
+    String? gender,
     String? profileImageUrl,
     String? token,
     DateTime? createdAt,
@@ -112,6 +117,7 @@ class User {
       lastName: lastName ?? this.lastName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       role: role ?? this.role,
+      gender: gender ?? this.gender,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       token: token ?? this.token,
       createdAt: createdAt ?? this.createdAt,

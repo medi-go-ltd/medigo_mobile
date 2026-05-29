@@ -20,6 +20,36 @@ enum PaymentMethodType {
   paypal,
 }
 
+enum IssueSeverity { mild, moderate, severe, verySevere }
+
+extension IssueSeverityLabel on IssueSeverity {
+  String get label {
+    switch (this) {
+      case IssueSeverity.mild:
+        return 'Mild';
+      case IssueSeverity.moderate:
+        return 'Moderate';
+      case IssueSeverity.severe:
+        return 'Severe';
+      case IssueSeverity.verySevere:
+        return 'Very Severe';
+    }
+  }
+
+  String get emoji {
+    switch (this) {
+      case IssueSeverity.mild:
+        return '🙂';
+      case IssueSeverity.moderate:
+        return '😐';
+      case IssueSeverity.severe:
+        return '😣';
+      case IssueSeverity.verySevere:
+        return '😫';
+    }
+  }
+}
+
 class TriageAnswers {
   final bool severeChestPain;
   final bool difficultyBreathing;
@@ -61,6 +91,7 @@ class PatientBooking {
   final String? otherPersonName;
   final TriageAnswers triage;
   final List<String>? _bodyAreas;
+  final IssueSeverity? issueSeverity;
   final String description;
   final PaymentMethodType paymentMethod;
   final double amount;
@@ -80,6 +111,7 @@ class PatientBooking {
     this.otherPersonName,
     this.triage = const TriageAnswers(),
     List<String>? bodyAreas,
+    this.issueSeverity,
     this.description = '',
     this.paymentMethod = PaymentMethodType.debitCard,
     required this.amount,
@@ -98,6 +130,7 @@ class PatientBooking {
     String? otherPersonName,
     TriageAnswers? triage,
     List<String>? bodyAreas,
+    IssueSeverity? issueSeverity,
     String? description,
     PaymentMethodType? paymentMethod,
     double? amount,
@@ -115,6 +148,7 @@ class PatientBooking {
       otherPersonName: otherPersonName ?? this.otherPersonName,
       triage: triage ?? this.triage,
       bodyAreas: bodyAreas ?? this.bodyAreas,
+      issueSeverity: issueSeverity ?? this.issueSeverity,
       description: description ?? this.description,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       amount: amount ?? this.amount,
