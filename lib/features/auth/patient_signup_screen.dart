@@ -22,6 +22,12 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   final _pageController = PageController();
   final _step1Key = GlobalKey<FormState>();
   final _step2Key = GlobalKey<FormState>();
+  final _step1ScrollController = ScrollController();
+  final _step2ScrollController = ScrollController();
+  final _step3ScrollController = ScrollController();
+  final _profileUploadKey = GlobalKey();
+  final _proofUploadKey = GlobalKey();
+  final _photoIdUploadKey = GlobalKey();
 
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
@@ -70,6 +76,9 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _step1ScrollController.dispose();
+    _step2ScrollController.dispose();
+    _step3ScrollController.dispose();
     _firstName.dispose();
     _lastName.dispose();
     _dob.dispose();
@@ -97,7 +106,10 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     super.dispose();
   }
 
+  void _dismissKeyboard() => FocusScope.of(context).unfocus();
+
   void _goToStep(int step) {
+    _dismissKeyboard();
     _pageController.animateToPage(
       step,
       duration: const Duration(milliseconds: 300),
@@ -107,6 +119,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
   }
 
   Future<void> _pickDate() async {
+    _dismissKeyboard();
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -147,9 +160,143 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
         !photoIdMissing;
   }
 
+  String? _firstStep1IssueMessage() {
+    final checks = <String? Function()>[
+      () => ValidationUtils.validateFirstName(_firstName.text),
+      () => ValidationUtils.validateLastName(_lastName.text),
+      () => _dob.text.trim().isEmpty ? 'Date of birth is required' : null,
+      () => ValidationUtils.validateEmail(_email.text),
+      () => ValidationUtils.validatePhone(_phone.text),
+      () => _houseNo.text.trim().isEmpty ? 'House number is required' : null,
+      () => _street.text.trim().isEmpty ? 'Street is required' : null,
+      () => ValidationUtils.validateUkPostcode(_postcode.text),
+      () => ValidationUtils.validatePassword(_password.text),
+    ];
+
+    for (final check in checks) {
+      final message = check();
+      if (message != null) return message;
+    }
+
+    if (!_hasUpload(_profileImagePath)) {
+      return 'Please upload a profile picture';
+    }
+    if (!_hasUpload(_proofOfAddressPath)) {
+      return 'Please upload proof of address';
+    }
+    if (!_hasUpload(_photoIdPath)) {
+      return 'Please upload photo ID';
+    }
+
+    return null;
+  }
+
+  void _scrollToStep1Issue() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final focusChecks = <FocusNode>[
+        _firstNameFocus,
+        _lastNameFocus,
+        _dobFocus,
+        _emailFocus,
+        _phoneFocus,
+        _houseNoFocus,
+        _streetFocus,
+        _postcodeFocus,
+        _passwordFocus,
+      ];
+
+      final validators = <String? Function()>[
+        () => ValidationUtils.validateFirstName(_firstName.text),
+        () => ValidationUtils.validateLastName(_lastName.text),
+        () => _dob.text.trim().isEmpty ? 'Required' : null,
+        () => ValidationUtils.validateEmail(_email.text),
+        () => ValidationUtils.validatePhone(_phone.text),
+        () => _houseNo.text.trim().isEmpty ? 'Required' : null,
+        () => _street.text.trim().isEmpty ? 'Required' : null,
+        () => ValidationUtils.validateUkPostcode(_postcode.text),
+        () => ValidationUtils.validatePassword(_password.text),
+      ];
+
+      for (var i = 0; i < focusChecks.length; i++) {
+        if (validators[i]() != null) {
+          _scrollToFocus(
+            focusChecks[i],
+            requestFocus: focusChecks[i] != _dobFocus,
+          );
+          return;
+        }
+      }
+
+      final uploadKeys = [
+        if (!_hasUpload(_profileImagePath)) _profileUploadKey,
+        if (!_hasUpload(_proofOfAddressPath)) _proofUploadKey,
+        if (!_hasUpload(_photoIdPath)) _photoIdUploadKey,
+      ];
+
+      if (uploadKeys.isNotEmpty) {
+        _scrollToKey(uploadKeys.first);
+      }
+    });
+  }
+
+  void _scrollToFocus(FocusNode node, {bool requestFocus = true}) {
+    final targetContext = node.context;
+    if (targetContext == null) return;
+
+    Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0.25,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    if (requestFocus) {
+      node.requestFocus();
+    }
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return;
+
+    Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0.25,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _handleStep1ValidationFailure() {
+    final message = _firstStep1IssueMessage() ??
+        'Please complete all required personal information';
+    _showError(message);
+    _dismissKeyboard();
+
+    if (_currentStep == 0) {
+      _scrollToStep1Issue();
+      return;
+    }
+
+    _pageController
+        .animateToPage(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        )
+        .then((_) {
+      if (!mounted) return;
+      setState(() => _currentStep = 0);
+      _scrollToStep1Issue();
+    });
+  }
+
   Future<void> _submit() async {
+    _dismissKeyboard();
+
     if (!_validateStep1()) {
-      _goToStep(0);
+      _handleStep1ValidationFailure();
       return;
     }
 
@@ -207,20 +354,24 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            const AppHeader(),
-            _buildProgress(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [_buildStep1(), _buildStep2(), _buildStep3()],
+        child: GestureDetector(
+          onTap: _dismissKeyboard,
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            children: [
+              const AppHeader(),
+              _buildProgress(),
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [_buildStep1(), _buildStep2(), _buildStep3()],
+                ),
               ),
-            ),
-            if (vm.isLoading)
-              const LinearProgressIndicator(color: AppColors.primary),
-          ],
+              if (vm.isLoading)
+                const LinearProgressIndicator(color: AppColors.primary),
+            ],
+          ),
         ),
       ),
     );
@@ -275,6 +426,8 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
 
   Widget _buildStep1() {
     return SingleChildScrollView(
+      controller: _step1ScrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(24),
       child: Form(
         key: _step1Key,
@@ -297,6 +450,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                     label: 'First Name',
                     hintText: 'First Name',
                     icon: Icons.person_outline,
+                    textCapitalization: TextCapitalization.words,
                     onFieldSubmitted: (_) =>
                         FocusScope.of(context).requestFocus(_lastNameFocus),
                     validator: ValidationUtils.validateFirstName,
@@ -311,8 +465,8 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                     label: 'Last Name',
                     hintText: 'Last Name',
                     icon: Icons.person_outline,
-                    onFieldSubmitted: (_) =>
-                        FocusScope.of(context).requestFocus(_dobFocus),
+                    textCapitalization: TextCapitalization.words,
+                    onFieldSubmitted: (_) => _pickDate(),
                     validator: ValidationUtils.validateLastName,
                     required: true,
                   ),
@@ -320,21 +474,19 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            GestureDetector(
+            AppTextField(
+              controller: _dob,
+              focusNode: _dobFocus,
+              label: 'Date of Birth',
+              hintText: 'DD/MM/YYYY',
+              icon: Icons.calendar_today_outlined,
+              readOnly: true,
               onTap: _pickDate,
-              child: AbsorbPointer(
-                child: AppTextField(
-                  controller: _dob,
-                  focusNode: _dobFocus,
-                  label: 'Date of Birth',
-                  hintText: 'DD/MM/YYYY',
-                  icon: Icons.calendar_today_outlined,
-                  onFieldSubmitted: (_) {},
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Required' : null,
-                  required: true,
-                ),
-              ),
+              onFieldSubmitted: (_) =>
+                  FocusScope.of(context).requestFocus(_emailFocus),
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'Date of birth is required' : null,
+              required: true,
             ),
             const SizedBox(height: 16),
             _buildDropdown('Gender', _gender, [
@@ -355,18 +507,21 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               required: true,
             ),
             const SizedBox(height: 16),
-            FileUploadField(
-              label: 'Profile Picture',
-              filePath: _profileImagePath,
-              previewSize: 72,
-              required: true,
-              errorText: _profileImageError,
-              onFileSelected: (path) => setState(() {
-                _profileImagePath = path.isEmpty ? null : path;
-                if (_hasUpload(_profileImagePath)) {
-                  _profileImageError = null;
-                }
-              }),
+            KeyedSubtree(
+              key: _profileUploadKey,
+              child: FileUploadField(
+                label: 'Profile Picture',
+                filePath: _profileImagePath,
+                previewSize: 72,
+                required: true,
+                errorText: _profileImageError,
+                onFileSelected: (path) => setState(() {
+                  _profileImagePath = path.isEmpty ? null : path;
+                  if (_hasUpload(_profileImagePath)) {
+                    _profileImageError = null;
+                  }
+                }),
+              ),
             ),
             const SizedBox(height: 16),
             AppTextField(
@@ -401,9 +556,11 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               label: 'House No.',
               hintText: 'House number',
               icon: Icons.home_outlined,
+              keyboardType: TextInputType.text,
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_streetFocus),
-              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'House number is required' : null,
               required: true,
             ),
             const SizedBox(height: 16),
@@ -413,9 +570,11 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               label: 'Street',
               hintText: 'Street name',
               icon: Icons.signpost_outlined,
+              keyboardType: TextInputType.streetAddress,
+              textCapitalization: TextCapitalization.words,
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_postcodeFocus),
-              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              validator: (v) => v == null || v.isEmpty ? 'Street is required' : null,
               required: true,
             ),
             const SizedBox(height: 16),
@@ -425,49 +584,61 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               label: 'Postcode',
               hintText: 'Postcode',
               icon: Icons.location_on_outlined,
+              keyboardType: TextInputType.text,
+              textCapitalization: TextCapitalization.characters,
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_passwordFocus),
               validator: ValidationUtils.validateUkPostcode,
               required: true,
             ),
             const SizedBox(height: 16),
-            FileUploadField(
-              label: 'Proof of Address',
-              filePath: _proofOfAddressPath,
-              required: true,
-              errorText: _proofOfAddressError,
-              onFileSelected: (path) => setState(() {
-                _proofOfAddressPath = path.isEmpty ? null : path;
-                if (_hasUpload(_proofOfAddressPath)) {
-                  _proofOfAddressError = null;
-                }
-              }),
+            KeyedSubtree(
+              key: _proofUploadKey,
+              child: FileUploadField(
+                label: 'Proof of Address',
+                filePath: _proofOfAddressPath,
+                required: true,
+                errorText: _proofOfAddressError,
+                onFileSelected: (path) => setState(() {
+                  _proofOfAddressPath = path.isEmpty ? null : path;
+                  if (_hasUpload(_proofOfAddressPath)) {
+                    _proofOfAddressError = null;
+                  }
+                }),
+              ),
             ),
             const SizedBox(height: 16),
-            FileUploadField(
-              label: 'Photo ID',
-              filePath: _photoIdPath,
-              required: true,
-              errorText: _photoIdError,
-              onFileSelected: (path) => setState(() {
-                _photoIdPath = path.isEmpty ? null : path;
-                if (_hasUpload(_photoIdPath)) {
-                  _photoIdError = null;
-                }
-              }),
+            KeyedSubtree(
+              key: _photoIdUploadKey,
+              child: FileUploadField(
+                label: 'Photo ID',
+                filePath: _photoIdPath,
+                required: true,
+                errorText: _photoIdError,
+                onFileSelected: (path) => setState(() {
+                  _photoIdPath = path.isEmpty ? null : path;
+                  if (_hasUpload(_photoIdPath)) {
+                    _photoIdError = null;
+                  }
+                }),
+              ),
             ),
             const SizedBox(height: 16),
             PasswordField(
               controller: _password,
               focusNode: _passwordFocus,
-              onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _dismissKeyboard(),
               validator: ValidationUtils.validatePassword,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
+                _dismissKeyboard();
                 if (_validateStep1()) {
                   _goToStep(1);
+                } else {
+                  _scrollToStep1Issue();
                 }
               },
               style: _primaryButtonStyle(),
@@ -481,6 +652,8 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
 
   Widget _buildStep2() {
     return SingleChildScrollView(
+      controller: _step2ScrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(24),
       child: Form(
         key: _step2Key,
@@ -510,6 +683,9 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
                 controller: _allergyDetails,
                 focusNode: _allergyFocus,
                 maxLines: 3,
+                keyboardType: TextInputType.multiline,
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   labelText: 'Allergy Details',
                   hintText: 'Describe your allergies',
@@ -524,6 +700,9 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               controller: _medications,
               focusNode: _medicationsFocus,
               maxLines: 2,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.newline,
               decoration: InputDecoration(
                 labelText: 'Current Medications (Optional)',
                 hintText: 'List any medications',
@@ -537,6 +716,10 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               controller: _notes,
               focusNode: _notesFocus,
               maxLines: 3,
+              keyboardType: TextInputType.multiline,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _dismissKeyboard(),
               decoration: InputDecoration(
                 labelText: 'Additional Medical Notes (Optional)',
                 hintText: 'Any other relevant information',
@@ -573,6 +756,8 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
 
   Widget _buildStep3() {
     return SingleChildScrollView(
+      controller: _step3ScrollController,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -12,7 +12,10 @@ class AppTextField extends StatelessWidget {
     required this.icon,
     this.keyboardType = TextInputType.text,
     this.textInputAction = TextInputAction.next,
+    this.textCapitalization = TextCapitalization.none,
     this.obscureText = false,
+    this.readOnly = false,
+    this.onTap,
     this.suffixIcon,
     this.validator,
     this.onFieldSubmitted,
@@ -27,7 +30,10 @@ class AppTextField extends StatelessWidget {
   final IconData icon;
   final TextInputType keyboardType;
   final TextInputAction textInputAction;
+  final TextCapitalization textCapitalization;
   final bool obscureText;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final void Function(String)? onFieldSubmitted;
@@ -46,7 +52,11 @@ class AppTextField extends StatelessWidget {
           focusNode: focusNode,
           keyboardType: keyboardType,
           textInputAction: textInputAction,
+          textCapitalization: textCapitalization,
           obscureText: obscureText,
+          readOnly: readOnly,
+          onTap: onTap,
+          enableInteractiveSelection: !readOnly,
           validator: validator,
           onFieldSubmitted: onFieldSubmitted,
           onChanged: onChanged,
