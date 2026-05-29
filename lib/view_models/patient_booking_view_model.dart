@@ -54,6 +54,7 @@ class PatientBookingViewModel extends ChangeNotifier {
     String? otherPersonName,
     TriageAnswers? triage,
     List<String>? bodyAreas,
+    IssueSeverity? issueSeverity,
     String? description,
     PaymentMethodType? paymentMethod,
   }) {
@@ -63,6 +64,7 @@ class PatientBookingViewModel extends ChangeNotifier {
       otherPersonName: otherPersonName,
       triage: triage,
       bodyAreas: bodyAreas,
+      issueSeverity: issueSeverity,
       description: description,
       paymentMethod: paymentMethod,
     );
@@ -109,7 +111,11 @@ class PatientBookingViewModel extends ChangeNotifier {
     if (booking.bodyAreas.isNotEmpty) {
       parts.add('Areas: ${BodyDiagramWidget.formatAreas(booking.bodyAreas)}');
     }
-    if (booking.description.isNotEmpty) parts.add(booking.description);
+    if (booking.issueSeverity != null) {
+      parts.add('Severity: ${booking.issueSeverity!.label}');
+    } else if (booking.description.isNotEmpty) {
+      parts.add(booking.description);
+    }
     if (booking.triage.isUrgent) parts.add('URGENT triage flagged');
     return parts.isEmpty ? 'Consultation requested' : parts.join(' – ');
   }

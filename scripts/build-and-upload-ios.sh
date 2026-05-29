@@ -36,9 +36,26 @@ done
 RELEASE_NOTES="${RELEASE_NOTES:-$(git log -1 --pretty=%B)}"
 APP_ID="1:118670844588:ios:048f1e88f63fbe6ed2f509"
 IPA_PATH="build/ios/ipa/medigo_mobile.ipa"
+PUBSPEC_PATH="$PROJECT_ROOT/pubspec.yaml"
+
+VERSION_LINE="$(awk '/^version:[[:space:]]*/ {sub(/^version:[[:space:]]*/, "", $0); print; exit}' "$PUBSPEC_PATH")"
+if [ -z "$VERSION_LINE" ]; then
+  echo "❌ Error: Could not read version from $PUBSPEC_PATH"
+  exit 1
+fi
+
+BUILD_NAME="${VERSION_LINE%%+*}"
+CURRENT_BUILD_NUMBER="${VERSION_LINE##*+}"
+if [ "$BUILD_NAME" = "$VERSION_LINE" ] || ! [[ "$CURRENT_BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+  echo "❌ Error: pubspec version must be in format x.y.z+<number>, got '$VERSION_LINE'"
+  exit 1
+fi
+
+NEXT_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
 
 echo "🚀 Building iOS release IPA..."
-$FLUTTER_CMD build ipa --release --export-method=ad-hoc
+echo "ℹ️  Using version $BUILD_NAME+$NEXT_BUILD_NUMBER (incremented from $VERSION_LINE)"
+$FLUTTER_CMD build ipa --release --export-method=ad-hoc --build-name="$BUILD_NAME" --build-number="$NEXT_BUILD_NUMBER"
 
 if [ ! -f "$IPA_PATH" ]; then
     echo "❌ Error: IPA not found at $IPA_PATH"
@@ -66,5 +83,6 @@ fi
 firebase appdistribution:distribute "$IPA_PATH" "${DISTRIBUTE_ARGS[@]}"
 
 echo "✅ Build and upload complete!"
+echo "🏷️ Uploaded build: $BUILD_NAME ($NEXT_BUILD_NUMBER)"
 echo "📱 Testers will receive an email notification"
 

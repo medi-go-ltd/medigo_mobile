@@ -1,20 +1,24 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 
-class BodyDiagramWidget extends StatelessWidget {
+enum BodyViewSide { front, back }
+
+const _bodyMapIconColor = Color(0xFF0B7F8E);
+
+class BodyDiagramWidget extends StatefulWidget {
   const BodyDiagramWidget({
     super.key,
     this.selectedAreas = const {},
+    this.gender,
     required this.onAreaToggled,
   });
 
   final Set<String> selectedAreas;
+  final String? gender;
   final ValueChanged<String> onAreaToggled;
 
-  // Ordered roughly head-to-toe so chips read naturally.
-  static const areas = [
+  static const primaryAreas = [
     'Head',
     'Throat',
     'Neck',
@@ -22,21 +26,24 @@ class BodyDiagramWidget extends StatelessWidget {
     'Right Shoulder',
     'Chest',
     'Upper Back',
+    'Lower Back',
     'Left Arm',
     'Right Arm',
+    'Abdomen',
+    'Pelvis',
+    'Left Leg',
+    'Right Leg',
+  ];
+
+  static const extraAreas = [
     'Left Elbow',
     'Right Elbow',
-    'Abdomen',
-    'Lower Back',
-    'Pelvis',
     'Left Wrist',
     'Right Wrist',
     'Left Hand',
     'Right Hand',
     'Left Hip',
     'Right Hip',
-    'Left Leg',
-    'Right Leg',
     'Left Knee',
     'Right Knee',
     'Left Ankle',
@@ -44,6 +51,8 @@ class BodyDiagramWidget extends StatelessWidget {
     'Left Foot',
     'Right Foot',
   ];
+
+  static const areas = [...primaryAreas, ...extraAreas];
 
   static int _areaSortOrder(String a, String b) {
     final ai = areas.indexOf(a);
@@ -56,643 +65,991 @@ class BodyDiagramWidget extends StatelessWidget {
     return sorted.join(', ');
   }
 
-  String get _selectionLabel {
-    if (selectedAreas.isEmpty) {
-      return 'Tap a body area or choose below';
-    }
-    return 'Selected: ${formatAreas(selectedAreas)}';
+  @override
+  State<BodyDiagramWidget> createState() => _BodyDiagramWidgetState();
+}
+
+class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
+  BodyViewSide _activeView = BodyViewSide.front;
+
+  void _toggleArea(String area) {
+    HapticFeedback.selectionClick();
+    widget.onAreaToggled(area);
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasSelection = selectedAreas.isNotEmpty;
+    final gridAreas = [
+      ...BodyDiagramWidget.primaryAreas,
+      '__more__',
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _buildHeader(),
+        const SizedBox(height: 12),
+        _buildDiagramCard(),
+        const SizedBox(height: 18),
         Text(
-          _selectionLabel,
-          style: AppTypography.bodySecondary.copyWith(
-            color: hasSelection ? AppColors.primary : null,
-            fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
+          'Or choose from the list',
+          style: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          height: 320,
-          decoration: BoxDecoration(
-            color: AppColors.highlight,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+        const SizedBox(height: 10),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            childAspectRatio: 2.55,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = Size(constraints.maxWidth, constraints.maxHeight);
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapDown: (details) {
-                    final area = _BodyDiagramPainter.regionAt(
-                      details.localPosition,
-                      size,
-                    );
-                    if (area != null) onAreaToggled(area);
-                  },
-                  child: CustomPaint(
-                    size: size,
-                    painter: _BodyDiagramPainter(
-                      selectedAreas: selectedAreas,
-                    ),
+          itemCount: gridAreas.length,
+          itemBuilder: (context, index) {
+            final area = gridAreas[index];
+            if (area == '__more__') {
+              return _MoreAreasTile(
+                onTap: _showMoreAreaPicker,
+              );
+            }
+            return _BodyAreaTile(
+              label: area,
+              assetPath: _assetForArea(area),
+              selected: widget.selectedAreas.contains(area),
+              onTap: () => _toggleArea(area),
+            );
+          },
+        ),
+        if (widget.selectedAreas.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _SelectedAreasBar(
+            selectedAreas: widget.selectedAreas,
+            onAreaToggled: _toggleArea,
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _showMoreAreaPicker() {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'More areas',
+                    style: AppTypography.pageTitle.copyWith(fontSize: 22),
                   ),
-                );
-              },
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Choose a more specific body area',
+                    style: AppTypography.bodySecondary,
+                  ),
+                  const SizedBox(height: 16),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 3.2,
+                        ),
+                    itemCount: BodyDiagramWidget.extraAreas.length,
+                    itemBuilder: (context, index) {
+                      final area = BodyDiagramWidget.extraAreas[index];
+                      return _ExtraAreaTile(
+                        label: area,
+                        icon: _extraIconForArea(area),
+                        selected: widget.selectedAreas.contains(area),
+                        onTap: () {
+                          _toggleArea(area);
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Where is the issue?',
+                style: AppTypography.pageTitle.copyWith(fontSize: 22),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Tap on the body or choose an area below',
+                style: AppTypography.bodySecondary.copyWith(fontSize: 14),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: areas.map((area) {
-            final selected = selectedAreas.contains(area);
-            return Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => onAreaToggled(area),
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary.withValues(alpha: 0.15)
-                        : AppColors.surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: selected ? AppColors.primary : AppColors.border,
-                      width: selected ? 1.6 : 1.2,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (selected) ...[
-                        const Icon(
-                          Icons.check_circle,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                      Text(
-                        area,
-                        style: AppTypography.body.copyWith(
-                          fontSize: 12,
-                          fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.w500,
-                          color: selected
-                              ? AppColors.primary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
+        _ViewToggle(
+          activeView: _activeView,
+          onChanged: (view) => setState(() => _activeView = view),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDiagramCard() {
+    return Container(
+      height: 370,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final showBoth = constraints.maxWidth >= 360;
+          if (!showBoth) {
+            return _BodyImagePanel(
+              side: _activeView,
+              gender: widget.gender,
+              selectedAreas: widget.selectedAreas,
+              onAreaToggled: _toggleArea,
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                flex: 38,
+                child: _BodyImagePanel(
+                  side: BodyViewSide.front,
+                  gender: widget.gender,
+                  selectedAreas: widget.selectedAreas,
+                  onAreaToggled: _toggleArea,
                 ),
               ),
-            );
-          }).toList(),
+              SizedBox(
+                width: 92,
+                child: _TapInstruction(),
+              ),
+              Expanded(
+                flex: 38,
+                child: _BodyImagePanel(
+                  side: BodyViewSide.back,
+                  gender: widget.gender,
+                  selectedAreas: widget.selectedAreas,
+                  onAreaToggled: _toggleArea,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TapInstruction extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          'assets/images/body_map/tap_body_area.png',
+          width: 52,
+          height: 52,
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Tap on a body\narea to select',
+          textAlign: TextAlign.center,
+          style: AppTypography.body.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.18,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          'You can select\nmultiple areas',
+          textAlign: TextAlign.center,
+          style: AppTypography.body.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.18,
+          ),
         ),
       ],
     );
   }
 }
 
-class _BodyPart {
-  const _BodyPart(this.id, this.pathBuilder, {this.isJoint = false});
+class _BodyImagePanel extends StatelessWidget {
+  const _BodyImagePanel({
+    required this.side,
+    required this.gender,
+    required this.selectedAreas,
+    required this.onAreaToggled,
+  });
 
-  final String id;
-  final Path Function(Size size) pathBuilder;
+  final BodyViewSide side;
+  final String? gender;
+  final Set<String> selectedAreas;
+  final ValueChanged<String> onAreaToggled;
 
-  // Joints are small focal points (shoulders, elbows, hands, knees, etc.)
-  // that overlay the main silhouette. They are invisible when unselected and
-  // render as a prominent dot when selected.
-  final bool isJoint;
+  @override
+  Widget build(BuildContext context) {
+    final zones = _zonesForSide(side);
+    final aspectRatio = _bodyAspectRatio(side: side, gender: gender);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final container = Size(constraints.maxWidth, constraints.maxHeight);
+        final figureSize = _fittedFigureSize(container, aspectRatio);
+        return Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: figureSize.width,
+              height: figureSize.height,
+              child: GestureDetector(
+                key: ValueKey('body-map-${side.name}-panel'),
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) {
+                  final normalized = Offset(
+                    details.localPosition.dx / figureSize.width,
+                    details.localPosition.dy / figureSize.height,
+                  );
+                  final area = _areaAtNormalized(
+                    normalized,
+                    zones,
+                    _hitOrderForSide(side),
+                  );
+                  if (area != null) onAreaToggled(area);
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: Image.asset(
+                        _bodyImageAsset(side: side, gender: gender),
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    ...zones
+                        .where((zone) => selectedAreas.contains(zone.area))
+                        .map(
+                          (zone) => _SelectionGlow(
+                            zone: zone,
+                            figureSize: figureSize,
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
-class _BodyDiagramPainter extends CustomPainter {
-  _BodyDiagramPainter({required this.selectedAreas});
+class _SelectionGlow extends StatelessWidget {
+  const _SelectionGlow({required this.zone, required this.figureSize});
 
-  final Set<String> selectedAreas;
+  final _BodyZone zone;
+  final Size figureSize;
 
-  static const _baseFill = Color(0xFFB8E4EC);
-  static const _baseStroke = Color(0xFF6FB2BF);
-  static const _accentStroke = Color(0xFF4A8B97);
-
-  static const _parts = <_BodyPart>[
-    // Silhouette shapes.
-    _BodyPart('Head', _headPath),
-    _BodyPart('Neck', _neckPath),
-    _BodyPart('Chest', _chestPath),
-    _BodyPart('Abdomen', _abdomenPath),
-    _BodyPart('Upper Back', _upperBackPath),
-    _BodyPart('Lower Back', _lowerBackPath),
-    _BodyPart('Left Arm', _leftArmPath),
-    _BodyPart('Right Arm', _rightArmPath),
-    _BodyPart('Left Leg', _leftLegPath),
-    _BodyPart('Right Leg', _rightLegPath),
-    // Joints / focal points (rendered as overlay dots).
-    _BodyPart('Throat', _throatPath, isJoint: true),
-    _BodyPart('Left Shoulder', _leftShoulderPath, isJoint: true),
-    _BodyPart('Right Shoulder', _rightShoulderPath, isJoint: true),
-    _BodyPart('Left Elbow', _leftElbowPath, isJoint: true),
-    _BodyPart('Right Elbow', _rightElbowPath, isJoint: true),
-    _BodyPart('Left Wrist', _leftWristPath, isJoint: true),
-    _BodyPart('Right Wrist', _rightWristPath, isJoint: true),
-    _BodyPart('Left Hand', _leftHandPath, isJoint: true),
-    _BodyPart('Right Hand', _rightHandPath, isJoint: true),
-    _BodyPart('Pelvis', _pelvisPath, isJoint: true),
-    _BodyPart('Left Hip', _leftHipPath, isJoint: true),
-    _BodyPart('Right Hip', _rightHipPath, isJoint: true),
-    _BodyPart('Left Knee', _leftKneePath, isJoint: true),
-    _BodyPart('Right Knee', _rightKneePath, isJoint: true),
-    _BodyPart('Left Ankle', _leftAnklePath, isJoint: true),
-    _BodyPart('Right Ankle', _rightAnklePath, isJoint: true),
-    _BodyPart('Left Foot', _leftFootPath, isJoint: true),
-    _BodyPart('Right Foot', _rightFootPath, isJoint: true),
-  ];
-
-  // Z-order for rendering the silhouette (back to front). Joints are drawn
-  // last as overlays in their own pass.
-  static const _drawOrder = [
-    'Left Arm',
-    'Right Arm',
-    'Chest',
-    'Abdomen',
-    'Upper Back',
-    'Lower Back',
-    'Left Leg',
-    'Right Leg',
-    'Neck',
-    'Head',
-  ];
-
-  // Hit-test priority — small joints win over larger silhouette regions, then
-  // limbs win over the torso.
-  static const _hitOrder = [
-    // Joints first (smallest, most specific).
-    'Throat',
-    'Left Shoulder',
-    'Right Shoulder',
-    'Left Elbow',
-    'Right Elbow',
-    'Left Wrist',
-    'Right Wrist',
-    'Left Hand',
-    'Right Hand',
-    'Left Hip',
-    'Right Hip',
-    'Pelvis',
-    'Left Knee',
-    'Right Knee',
-    'Left Ankle',
-    'Right Ankle',
-    'Left Foot',
-    'Right Foot',
-    // Then medium-sized silhouette regions.
-    'Head',
-    'Neck',
-    'Left Arm',
-    'Right Arm',
-    'Left Leg',
-    'Right Leg',
-    'Lower Back',
-    'Upper Back',
-    'Chest',
-    'Abdomen',
-  ];
-
-  static Path _headPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    return Path()..addOval(
-      Rect.fromCenter(
-        center: Offset(w * 0.5, h * 0.10),
-        width: w * 0.15,
-        height: h * 0.15,
+  @override
+  Widget build(BuildContext context) {
+    final glow = zone.glowRect;
+    final isEllipse = (glow.width - glow.height).abs() > 0.001;
+    return Positioned(
+      left: glow.left * figureSize.width,
+      top: glow.top * figureSize.height,
+      width: glow.width * figureSize.width,
+      height: glow.height * figureSize.height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: isEllipse ? BoxShape.rectangle : BoxShape.circle,
+          borderRadius: isEllipse
+              ? BorderRadius.all(
+                  Radius.elliptical(
+                    glow.width * figureSize.width / 2,
+                    glow.height * figureSize.height / 2,
+                  ),
+                )
+              : null,
+          gradient: RadialGradient(
+            colors: [
+              AppColors.primary.withValues(alpha: 0.62),
+              AppColors.primary.withValues(alpha: 0.30),
+              AppColors.primary.withValues(alpha: 0.0),
+            ],
+            stops: const [0.0, 0.58, 1.0],
+          ),
+        ),
       ),
     );
   }
+}
 
-  static Path _neckPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    final cx = w * 0.5;
-    final topY = h * 0.17;
-    final botY = h * 0.22;
-    final topHalf = w * 0.04;
-    final botHalf = w * 0.055;
-    return Path()
-      ..moveTo(cx - topHalf, topY)
-      ..quadraticBezierTo(cx, topY - h * 0.005, cx + topHalf, topY)
-      ..lineTo(cx + botHalf, botY)
-      ..lineTo(cx - botHalf, botY)
-      ..close();
+class _BodyZone {
+  const _BodyZone(this.area, this.hitRect, this.glowRect);
+
+  final String area;
+  final Rect hitRect;
+  final Rect glowRect;
+}
+
+List<_BodyZone> _zonesForSide(BodyViewSide side) {
+  return side == BodyViewSide.front ? _frontZones : _backZones;
+}
+
+List<String> _hitOrderForSide(BodyViewSide side) {
+  return side == BodyViewSide.front ? _frontHitOrder : _backHitOrder;
+}
+
+String _bodyImageAsset({required BodyViewSide side, String? gender}) {
+  final normalizedGender = gender?.trim().toLowerCase();
+  final genderFolder = normalizedGender == 'female' ? 'female' : 'male';
+  final view = side == BodyViewSide.front ? 'front' : 'back';
+  return 'assets/images/body_map/body_${view}_$genderFolder.png';
+}
+
+double _bodyAspectRatio({required BodyViewSide side, String? gender}) {
+  final isFemale = gender?.trim().toLowerCase() == 'female';
+  if (isFemale) {
+    return side == BodyViewSide.front ? 265 / 545 : 250 / 545;
   }
+  return side == BodyViewSide.front ? 285 / 555 : 275 / 555;
+}
 
-  // Chest: rounded shoulders flaring out, tapering to the waist.
-  static Path _chestPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    final cx = w * 0.5;
-    final neckBaseY = h * 0.22;
-    final shoulderY = h * 0.275;
-    final waistY = h * 0.45;
-    final neckHalf = w * 0.055;
-    final shoulderHalf = w * 0.17;
-    final waistHalf = w * 0.13;
-
-    return Path()
-      ..moveTo(cx - neckHalf, neckBaseY)
-      // Over the left shoulder cap.
-      ..cubicTo(
-        cx - shoulderHalf * 0.65, neckBaseY - h * 0.005,
-        cx - shoulderHalf, neckBaseY,
-        cx - shoulderHalf, shoulderY,
-      )
-      // Side of torso curving inward to the waist.
-      ..cubicTo(
-        cx - shoulderHalf, shoulderY + h * 0.04,
-        cx - waistHalf, waistY - h * 0.05,
-        cx - waistHalf, waistY,
-      )
-      ..lineTo(cx + waistHalf, waistY)
-      ..cubicTo(
-        cx + waistHalf, waistY - h * 0.05,
-        cx + shoulderHalf, shoulderY + h * 0.04,
-        cx + shoulderHalf, shoulderY,
-      )
-      ..cubicTo(
-        cx + shoulderHalf, neckBaseY,
-        cx + shoulderHalf * 0.65, neckBaseY - h * 0.005,
-        cx + neckHalf, neckBaseY,
-      )
-      ..close();
+Size _fittedFigureSize(Size container, double aspectRatio) {
+  final containerAspect = container.width / container.height;
+  if (aspectRatio > containerAspect) {
+    return Size(container.width, container.width / aspectRatio);
   }
+  return Size(container.height * aspectRatio, container.height);
+}
 
-  // Abdomen: continues from chest waist down to hips.
-  static Path _abdomenPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    final cx = w * 0.5;
-    final topY = h * 0.45;
-    final botY = h * 0.555;
-    final topHalf = w * 0.13;
-    final hipHalf = w * 0.15;
-
-    return Path()
-      ..moveTo(cx - topHalf, topY)
-      ..cubicTo(
-        cx - topHalf, topY + h * 0.04,
-        cx - hipHalf, botY - h * 0.04,
-        cx - hipHalf, botY,
-      )
-      ..lineTo(cx + hipHalf, botY)
-      ..cubicTo(
-        cx + hipHalf, botY - h * 0.04,
-        cx + topHalf, topY + h * 0.04,
-        cx + topHalf, topY,
-      )
-      ..close();
-  }
-
-  // Upper back: slim spine indicator across the chest portion of the torso.
-  static Path _upperBackPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    final rect = Rect.fromCenter(
-      center: Offset(w * 0.5, h * 0.345),
-      width: w * 0.045,
-      height: h * 0.19,
-    );
-    return Path()..addRRect(
-      RRect.fromRectAndRadius(rect, Radius.circular(w * 0.022)),
-    );
-  }
-
-  // Lower back: slim spine indicator across the abdomen portion of the torso.
-  static Path _lowerBackPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    final rect = Rect.fromCenter(
-      center: Offset(w * 0.5, h * 0.49),
-      width: w * 0.045,
-      height: h * 0.105,
-    );
-    return Path()..addRRect(
-      RRect.fromRectAndRadius(rect, Radius.circular(w * 0.022)),
-    );
-  }
-
-  // Left arm: slim tapered limb with rounded shoulder cap and hand.
-  static Path _leftArmPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-
-    // Shoulder cap — inner edge tucks under the chest.
-    final shoulderInnerX = w * 0.305;
-    final shoulderTopY = h * 0.245;
-    final shoulderOuterX = w * 0.205;
-    final shoulderCapY = h * 0.295;
-    // Upper arm / elbow.
-    final elbowOuterX = w * 0.19;
-    final elbowInnerX = w * 0.26;
-    final elbowY = h * 0.42;
-    // Forearm / wrist.
-    final wristOuterX = w * 0.205;
-    final wristInnerX = w * 0.27;
-    final wristY = h * 0.55;
-    // Hand.
-    final handBottomY = h * 0.585;
-    final handBottomCx = w * 0.24;
-    // Armpit (inner shoulder).
-    final armpitX = w * 0.295;
-    final armpitY = h * 0.33;
-
-    return Path()
-      ..moveTo(shoulderInnerX, shoulderTopY)
-      // Up and over the shoulder cap (rounded deltoid).
-      ..cubicTo(
-        shoulderInnerX - w * 0.04, shoulderTopY - h * 0.015,
-        shoulderOuterX + w * 0.015, shoulderTopY - h * 0.005,
-        shoulderOuterX, shoulderCapY,
-      )
-      // Outer edge: shoulder -> elbow (slight inward taper).
-      ..cubicTo(
-        shoulderOuterX - w * 0.008, shoulderCapY + h * 0.05,
-        elbowOuterX, elbowY - h * 0.05,
-        elbowOuterX, elbowY,
-      )
-      // Outer edge: elbow -> wrist.
-      ..cubicTo(
-        elbowOuterX + w * 0.005, elbowY + h * 0.05,
-        wristOuterX - w * 0.005, wristY - h * 0.04,
-        wristOuterX, wristY,
-      )
-      // Hand: rounded bottom.
-      ..cubicTo(
-        wristOuterX, handBottomY - h * 0.003,
-        handBottomCx - w * 0.025, handBottomY + h * 0.005,
-        handBottomCx, handBottomY,
-      )
-      ..cubicTo(
-        wristInnerX + w * 0.005, handBottomY + h * 0.003,
-        wristInnerX + w * 0.005, handBottomY - h * 0.005,
-        wristInnerX, wristY,
-      )
-      // Inner edge: wrist -> elbow.
-      ..cubicTo(
-        wristInnerX - w * 0.005, wristY - h * 0.04,
-        elbowInnerX, elbowY + h * 0.05,
-        elbowInnerX, elbowY,
-      )
-      // Inner edge: elbow -> armpit.
-      ..cubicTo(
-        elbowInnerX, elbowY - h * 0.06,
-        armpitX - w * 0.005, armpitY + h * 0.04,
-        armpitX, armpitY,
-      )
-      // Up into the chest/shoulder join.
-      ..lineTo(shoulderInnerX, shoulderTopY)
-      ..close();
-  }
-
-  static Path _rightArmPath(Size s) {
-    return _mirrorPath(_leftArmPath(s), s.width);
-  }
-
-  // Left leg: slim tapered limb with knee, calf and a small foot pointing
-  // forward (out to the left). Drawn in front of the abdomen so the inner gap
-  // between the two legs is clearly visible.
-  static Path _leftLegPath(Size s) {
-    final w = s.width;
-    final h = s.height;
-    // Hip line — top of leg sits flush with abdomen bottom.
-    final hipOuterX = w * 0.345;
-    final hipInnerX = w * 0.485;
-    final hipY = h * 0.555;
-    // Knee.
-    final kneeOuterX = w * 0.345;
-    final kneeInnerX = w * 0.475;
-    final kneeY = h * 0.755;
-    // Ankle.
-    final ankleOuterX = w * 0.37;
-    final ankleInnerX = w * 0.455;
-    final ankleY = h * 0.925;
-    // Foot — small forward extension.
-    final footBottomY = h * 0.955;
-    final footHeelX = w * 0.365;
-    final footToeX = w * 0.43;
-
-    return Path()
-      ..moveTo(hipOuterX, hipY)
-      // Outer thigh -> knee (subtle taper).
-      ..cubicTo(
-        hipOuterX - w * 0.005, hipY + h * 0.05,
-        kneeOuterX - w * 0.005, kneeY - h * 0.06,
-        kneeOuterX, kneeY,
-      )
-      // Knee -> outer calf -> ankle.
-      ..cubicTo(
-        kneeOuterX + w * 0.008, kneeY + h * 0.05,
-        ankleOuterX - w * 0.005, ankleY - h * 0.04,
-        ankleOuterX, ankleY,
-      )
-      // Heel: small curve down to bottom of foot.
-      ..cubicTo(
-        ankleOuterX - w * 0.005, footBottomY - h * 0.005,
-        footHeelX, footBottomY,
-        footHeelX + w * 0.01, footBottomY,
-      )
-      // Bottom of foot to toe.
-      ..lineTo(footToeX, footBottomY)
-      // Top of foot back up to inner ankle.
-      ..cubicTo(
-        footToeX, footBottomY - h * 0.008,
-        ankleInnerX + w * 0.01, ankleY + h * 0.005,
-        ankleInnerX, ankleY,
-      )
-      // Inner calf -> knee.
-      ..cubicTo(
-        ankleInnerX + w * 0.005, ankleY - h * 0.04,
-        kneeInnerX - w * 0.005, kneeY + h * 0.04,
-        kneeInnerX, kneeY,
-      )
-      // Inner thigh -> hip.
-      ..cubicTo(
-        kneeInnerX, kneeY - h * 0.06,
-        hipInnerX, hipY + h * 0.05,
-        hipInnerX, hipY,
-      )
-      ..close();
-  }
-
-  static Path _rightLegPath(Size s) {
-    return _mirrorPath(_leftLegPath(s), s.width);
-  }
-
-  // ----- Joints / focal points (rendered as overlay dots) ---------------
-
-  // Joint hit/visual radius scales with the smaller dimension so it stays
-  // proportional in both wide test layouts and square device layouts.
-  static double _jointR(Size s, [double scale = 1.0]) {
-    return math.min(s.width, s.height) * 0.035 * scale;
-  }
-
-  static Path _circleAt(Size s, double xFrac, double yFrac,
-      [double rScale = 1.0]) {
-    return Path()..addOval(
-      Rect.fromCircle(
-        center: Offset(s.width * xFrac, s.height * yFrac),
-        radius: _jointR(s, rScale),
-      ),
-    );
-  }
-
-  static Path _throatPath(Size s) => _circleAt(s, 0.5, 0.20, 0.85);
-
-  static Path _leftShoulderPath(Size s) => _circleAt(s, 0.27, 0.275, 1.15);
-  static Path _rightShoulderPath(Size s) => _circleAt(s, 0.73, 0.275, 1.15);
-
-  static Path _leftElbowPath(Size s) => _circleAt(s, 0.215, 0.435, 1.0);
-  static Path _rightElbowPath(Size s) => _circleAt(s, 0.785, 0.435, 1.0);
-
-  static Path _leftWristPath(Size s) => _circleAt(s, 0.235, 0.555, 0.9);
-  static Path _rightWristPath(Size s) => _circleAt(s, 0.765, 0.555, 0.9);
-
-  static Path _leftHandPath(Size s) => _circleAt(s, 0.245, 0.595, 1.05);
-  static Path _rightHandPath(Size s) => _circleAt(s, 0.755, 0.595, 1.05);
-
-  // Pelvis sits centered just below the abdomen, between the two hips.
-  static Path _pelvisPath(Size s) => _circleAt(s, 0.5, 0.555, 1.1);
-
-  static Path _leftHipPath(Size s) => _circleAt(s, 0.385, 0.575, 1.1);
-  static Path _rightHipPath(Size s) => _circleAt(s, 0.615, 0.575, 1.1);
-
-  static Path _leftKneePath(Size s) => _circleAt(s, 0.41, 0.755, 1.15);
-  static Path _rightKneePath(Size s) => _circleAt(s, 0.59, 0.755, 1.15);
-
-  static Path _leftAnklePath(Size s) => _circleAt(s, 0.42, 0.92, 0.9);
-  static Path _rightAnklePath(Size s) => _circleAt(s, 0.58, 0.92, 0.9);
-
-  static Path _leftFootPath(Size s) => _circleAt(s, 0.40, 0.95, 1.05);
-  static Path _rightFootPath(Size s) => _circleAt(s, 0.60, 0.95, 1.05);
-
-  static Path _mirrorPath(Path path, double width) {
-    final matrix = Matrix4.identity()
-      ..translateByDouble(width, 0.0, 0.0, 1.0)
-      ..scaleByDouble(-1.0, 1.0, 1.0, 1.0);
-    return path.transform(matrix.storage);
-  }
-
-  static String? regionAt(Offset position, Size size) {
-    for (final id in _hitOrder) {
-      final part = _parts.firstWhere((p) => p.id == id);
-      if (part.pathBuilder(size).contains(position)) return id;
-    }
+String? _areaAtNormalized(
+  Offset normalized,
+  List<_BodyZone> zones,
+  List<String> hitOrder,
+) {
+  if (normalized.dx < 0 ||
+      normalized.dx > 1 ||
+      normalized.dy < 0 ||
+      normalized.dy > 1) {
     return null;
   }
 
+  final zonesByArea = {for (final zone in zones) zone.area: zone};
+  for (final area in hitOrder) {
+    final zone = zonesByArea[area];
+    if (zone != null && _zoneHitContains(zone, normalized)) return area;
+  }
+  return null;
+}
+
+bool _zoneHitContains(_BodyZone zone, Offset point) {
+  final rect = zone.hitRect;
+  final center = rect.center;
+  final rx = rect.width / 2;
+  final ry = rect.height / 2;
+  if (rx <= 0 || ry <= 0) return false;
+
+  final dx = (point.dx - center.dx) / rx;
+  final dy = (point.dy - center.dy) / ry;
+  return (dx * dx) + (dy * dy) <= 1;
+}
+
+_BodyZone _bodyZone(String area, double cx, double cy, double radius) {
+  final glow = Rect.fromCircle(center: Offset(cx, cy), radius: radius);
+  return _BodyZone(area, glow, glow);
+}
+
+_BodyZone _bodyHeadZone(String area, double cx, double cy) {
+  const glowRx = 0.048;
+  const glowRy = 0.052;
+  const hitRx = 0.052;
+  const hitRy = 0.068;
+  final glow = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: glowRx * 2,
+    height: glowRy * 2,
+  );
+  final hit = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: hitRx * 2,
+    height: hitRy * 2,
+  );
+  return _BodyZone(area, hit, glow);
+}
+
+_BodyZone _bodyLegZone(
+  String area,
+  double cx,
+  double cy,
+  double rx,
+  double ry,
+) {
+  final glow = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: rx * 2,
+    height: ry * 2,
+  );
+  return _BodyZone(area, glow, glow);
+}
+
+_BodyZone _bodyFootZone(
+  String area,
+  double cx,
+  double cy,
+  double rx,
+  double ry,
+) {
+  final glow = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: rx * 2,
+    height: ry * 2,
+  );
+  return _BodyZone(area, glow, glow);
+}
+
+_BodyZone _bodyAnkleZone(String area, double cx, double cy) {
+  const glowRx = 0.038;
+  const glowRy = 0.032;
+  const hitRx = 0.042;
+  const hitRy = 0.038;
+  final glow = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: glowRx * 2,
+    height: glowRy * 2,
+  );
+  final hit = Rect.fromCenter(
+    center: Offset(cx, cy),
+    width: hitRx * 2,
+    height: hitRy * 2,
+  );
+  return _BodyZone(area, hit, glow);
+}
+
+const _frontHitOrder = [
+  'Head',
+  'Neck',
+  'Throat',
+  'Left Hand',
+  'Right Hand',
+  'Left Wrist',
+  'Right Wrist',
+  'Left Elbow',
+  'Right Elbow',
+  'Left Shoulder',
+  'Right Shoulder',
+  'Left Knee',
+  'Right Knee',
+  'Left Ankle',
+  'Right Ankle',
+  'Left Foot',
+  'Right Foot',
+  'Left Hip',
+  'Right Hip',
+  'Left Arm',
+  'Right Arm',
+  'Left Leg',
+  'Right Leg',
+  'Abdomen',
+  'Pelvis',
+  'Chest',
+];
+
+const _backHitOrder = [
+  'Head',
+  'Neck',
+  'Left Hand',
+  'Right Hand',
+  'Left Wrist',
+  'Right Wrist',
+  'Left Elbow',
+  'Right Elbow',
+  'Left Shoulder',
+  'Right Shoulder',
+  'Left Knee',
+  'Right Knee',
+  'Left Ankle',
+  'Right Ankle',
+  'Left Foot',
+  'Right Foot',
+  'Left Hip',
+  'Right Hip',
+  'Left Arm',
+  'Right Arm',
+  'Left Leg',
+  'Right Leg',
+  'Lower Back',
+  'Pelvis',
+  'Upper Back',
+];
+
+final _frontZones = [
+  _bodyHeadZone('Head', 0.540, 0.082),
+  _bodyZone('Throat', 0.540, 0.182, 0.035),
+  _bodyZone('Neck', 0.540, 0.151, 0.040),
+  _bodyZone('Left Shoulder', 0.725, 0.211, 0.065),
+  _bodyZone('Right Shoulder', 0.335, 0.211, 0.065),
+  _bodyZone('Chest', 0.540, 0.297, 0.085),
+  _bodyZone('Abdomen', 0.537, 0.395, 0.078),
+  _bodyZone('Pelvis', 0.535, 0.502, 0.076),
+  _bodyZone('Left Arm', 0.814, 0.432, 0.055),
+  _bodyZone('Right Arm', 0.263, 0.432, 0.055),
+  _bodyZone('Left Elbow', 0.839, 0.481, 0.042),
+  _bodyZone('Right Elbow', 0.235, 0.481, 0.042),
+  _bodyZone('Left Wrist', 0.889, 0.559, 0.035),
+  _bodyZone('Right Wrist', 0.181, 0.559, 0.035),
+  _bodyZone('Left Hand', 0.665, 0.647, 0.045),
+  _bodyZone('Right Hand', 0.409, 0.647, 0.045),
+  _bodyZone('Left Hip', 0.620, 0.550, 0.052),
+  _bodyZone('Right Hip', 0.455, 0.550, 0.052),
+  _bodyLegZone('Left Leg', 0.640, 0.748, 0.050, 0.100),
+  _bodyLegZone('Right Leg', 0.419, 0.748, 0.050, 0.100),
+  _bodyZone('Left Knee', 0.640, 0.705, 0.048),
+  _bodyZone('Right Knee', 0.419, 0.705, 0.048),
+  _bodyAnkleZone('Left Ankle', 0.654, 0.879),
+  _bodyAnkleZone('Right Ankle', 0.418, 0.879),
+  _bodyFootZone('Left Foot', 0.651, 0.955, 0.055, 0.020),
+  _bodyFootZone('Right Foot', 0.421, 0.955, 0.055, 0.020),
+];
+
+final _backZones = [
+  _bodyHeadZone('Head', 0.459, 0.082),
+  _bodyZone('Neck', 0.458, 0.151, 0.040),
+  _bodyZone('Left Shoulder', 0.248, 0.211, 0.065),
+  _bodyZone('Right Shoulder', 0.665, 0.211, 0.065),
+  _bodyZone('Upper Back', 0.460, 0.297, 0.088),
+  _bodyZone('Lower Back', 0.459, 0.452, 0.072),
+  _bodyZone('Pelvis', 0.459, 0.508, 0.080),
+  _bodyZone('Left Arm', 0.165, 0.432, 0.055),
+  _bodyZone('Right Arm', 0.753, 0.432, 0.055),
+  _bodyZone('Left Elbow', 0.778, 0.481, 0.042),
+  _bodyZone('Right Elbow', 0.142, 0.481, 0.042),
+  _bodyZone('Left Wrist', 0.831, 0.559, 0.035),
+  _bodyZone('Right Wrist', 0.089, 0.559, 0.035),
+  _bodyZone('Left Hand', 0.320, 0.645, 0.045),
+  _bodyZone('Right Hand', 0.589, 0.645, 0.045),
+  _bodyZone('Left Hip', 0.380, 0.548, 0.052),
+  _bodyZone('Right Hip', 0.545, 0.548, 0.052),
+  _bodyLegZone('Left Leg', 0.333, 0.748, 0.050, 0.098),
+  _bodyLegZone('Right Leg', 0.567, 0.748, 0.050, 0.098),
+  _bodyZone('Left Knee', 0.342, 0.723, 0.048),
+  _bodyZone('Right Knee', 0.565, 0.723, 0.048),
+  _bodyAnkleZone('Left Ankle', 0.325, 0.877),
+  _bodyAnkleZone('Right Ankle', 0.578, 0.877),
+  _bodyFootZone('Left Foot', 0.252, 0.958, 0.072, 0.018),
+  _bodyFootZone('Right Foot', 0.580, 0.958, 0.072, 0.018),
+];
+
+String _assetForArea(String area) {
+  switch (area) {
+    case 'Head':
+      return 'assets/images/body_map/head.png';
+    case 'Throat':
+      return 'assets/images/body_map/throat.png';
+    case 'Neck':
+      return 'assets/images/body_map/neck.png';
+    case 'Left Shoulder':
+      return 'assets/images/body_map/left_shoulder.png';
+    case 'Right Shoulder':
+      return 'assets/images/body_map/right_shoulder.png';
+    case 'Chest':
+      return 'assets/images/body_map/chest.png';
+    case 'Upper Back':
+      return 'assets/images/body_map/upper_back.png';
+    case 'Lower Back':
+      return 'assets/images/body_map/lower_back.png';
+    case 'Left Arm':
+      return 'assets/images/body_map/left_arm.png';
+    case 'Right Arm':
+      return 'assets/images/body_map/right_arm.png';
+    case 'Abdomen':
+      return 'assets/images/body_map/abdomen.png';
+    case 'Pelvis':
+      return 'assets/images/body_map/pelvis.png';
+    case 'Left Leg':
+      return 'assets/images/body_map/left_leg.png';
+    case 'Right Leg':
+      return 'assets/images/body_map/right_leg.png';
+    default:
+      return 'assets/images/body_map/more.png';
+  }
+}
+
+class _ViewToggle extends StatelessWidget {
+  const _ViewToggle({required this.activeView, required this.onChanged});
+
+  final BodyViewSide activeView;
+  final ValueChanged<BodyViewSide> onChanged;
+
   @override
-  void paint(Canvas canvas, Size size) {
-    // Pass 1: silhouette in z-order (arms, torso, legs, neck, head).
-    for (final id in _drawOrder) {
-      final part = _parts.firstWhere((p) => p.id == id);
-      final path = part.pathBuilder(size);
-      final selected = selectedAreas.contains(id);
-      final fill = selected
-          ? AppColors.primary.withValues(alpha: 0.55)
-          : _baseFill;
-      final stroke = selected ? AppColors.primary : _baseStroke;
-
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = fill
-          ..style = PaintingStyle.fill
-          ..isAntiAlias = true,
-      );
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = stroke
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = selected ? 2.5 : 1.4
-          ..strokeJoin = StrokeJoin.round
-          ..strokeCap = StrokeCap.round
-          ..isAntiAlias = true,
-      );
-    }
-
-    // Subtle anatomical details to reinforce the "human" silhouette.
-    _drawAnatomyHints(canvas, size);
-
-    // Pass 2: joint overlays. Only rendered when selected — keeps the
-    // silhouette clean while still letting users see which joint is active.
-    for (final part in _parts.where((p) => p.isJoint)) {
-      if (!selectedAreas.contains(part.id)) continue;
-      final path = part.pathBuilder(size);
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = AppColors.primary
-          ..style = PaintingStyle.fill
-          ..isAntiAlias = true,
-      );
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = AppColors.surface
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.6
-          ..isAntiAlias = true,
-      );
-    }
+  Widget build(BuildContext context) {
+    return Container(
+      width: 176,
+      height: 38,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      padding: const EdgeInsets.all(2),
+      child: Row(
+        children: [
+          _toggleChip('Front', BodyViewSide.front),
+          _toggleChip('Back', BodyViewSide.back),
+        ],
+      ),
+    );
   }
 
-  void _drawAnatomyHints(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final hintPaint = Paint()
-      ..color = _accentStroke.withValues(alpha: 0.35)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
-      ..strokeCap = StrokeCap.round
-      ..isAntiAlias = true;
-
-    // Collar line between neck and chest.
-    final collar = Path()
-      ..moveTo(w * 0.41, h * 0.245)
-      ..quadraticBezierTo(w * 0.5, h * 0.265, w * 0.59, h * 0.245);
-    canvas.drawPath(collar, hintPaint);
-
-    // Waist crease at the chest/abdomen boundary.
-    final waist = Path()
-      ..moveTo(w * 0.37, h * 0.455)
-      ..quadraticBezierTo(w * 0.5, h * 0.47, w * 0.63, h * 0.455);
-    canvas.drawPath(waist, hintPaint);
-
-    // Subtle inner-leg seam at the crotch line so the legs read as separate.
-    final crotch = Path()
-      ..moveTo(w * 0.5, h * 0.555)
-      ..lineTo(w * 0.5, h * 0.58);
-    canvas.drawPath(crotch, hintPaint);
+  Widget _toggleChip(String label, BodyViewSide side) {
+    final selected = activeView == side;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onChanged(side),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: selected ? AppColors.primary : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
   }
+}
+
+class _BodyAreaTile extends StatelessWidget {
+  const _BodyAreaTile({
+    required this.label,
+    required this.assetPath,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String assetPath;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
-  bool shouldRepaint(covariant _BodyDiagramPainter oldDelegate) {
-    return oldDelegate.selectedAreas != selectedAreas;
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? AppColors.primary : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                assetPath,
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+                color: selected ? AppColors.surface : _bodyMapIconColor,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1.12,
+                    color: selected ? AppColors.surface : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MoreAreasTile extends StatelessWidget {
+  const _MoreAreasTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/images/body_map/more.png',
+                width: 30,
+                height: 30,
+                fit: BoxFit.contain,
+                color: _bodyMapIconColor,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'More Areas',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    height: 1.12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExtraAreaTile extends StatelessWidget {
+  const _ExtraAreaTile({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppColors.primary : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: selected ? AppColors.surface : _bodyMapIconColor,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppColors.surface : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+IconData _extraIconForArea(String area) {
+  if (area.contains('Elbow')) return Icons.linear_scale_rounded;
+  if (area.contains('Wrist')) return Icons.horizontal_rule_rounded;
+  if (area.contains('Hand')) return Icons.back_hand_outlined;
+  if (area.contains('Hip')) return Icons.accessibility_new_rounded;
+  if (area.contains('Knee')) return Icons.expand_more_rounded;
+  if (area.contains('Ankle')) return Icons.more_horiz_rounded;
+  if (area.contains('Foot')) return Icons.directions_walk_rounded;
+  return Icons.add_circle_outline_rounded;
+}
+
+class _SelectedAreasBar extends StatelessWidget {
+  const _SelectedAreasBar({
+    required this.selectedAreas,
+    required this.onAreaToggled,
+  });
+
+  final Set<String> selectedAreas;
+  final ValueChanged<String> onAreaToggled;
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedAreas = selectedAreas.toList()
+      ..sort(BodyDiagramWidget._areaSortOrder);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            'Selected areas (${selectedAreas.length})',
+            style: AppTypography.body.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 6,
+              children: sortedAreas
+                  .map(
+                    (area) => _SelectedAreaChip(
+                      label: area,
+                      onRemove: () => onAreaToggled(area),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SelectedAreaChip extends StatelessWidget {
+  const _SelectedAreaChip({required this.label, required this.onRemove});
+
+  final String label;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTypography.body.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: onRemove,
+            child: Icon(
+              Icons.close,
+              size: 14,
+              color: AppColors.primary.withValues(alpha: 0.85),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

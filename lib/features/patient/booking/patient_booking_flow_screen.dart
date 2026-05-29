@@ -3,6 +3,7 @@ import 'package:medigo_mobile/models/doctor.dart';
 import 'package:medigo_mobile/models/patient_booking.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/patient_booking_view_model.dart';
 import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +31,7 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   final _otherNameController = TextEditingController();
   TriageAnswers _triage = const TriageAnswers();
   final Set<String> _bodyAreas = {};
-  final _descriptionController = TextEditingController();
+  IssueSeverity? _issueSeverity;
   PaymentMethodType _paymentMethod = PaymentMethodType.debitCard;
 
   @override
@@ -48,7 +49,6 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   void dispose() {
     _pageController.dispose();
     _otherNameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -92,7 +92,8 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
           : null,
       triage: _triage,
       bodyAreas: _bodyAreas.toList(),
-      description: _descriptionController.text.trim(),
+      issueSeverity: _issueSeverity,
+      description: _issueSeverity?.label ?? '',
       paymentMethod: _paymentMethod,
     );
   }
@@ -159,40 +160,81 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
 
   Widget _buildStepIndicator() {
     const labels = ['Who', 'Triage', 'Issue', 'Pay', 'Confirm'];
+    const icons = [
+      Icons.person_outline,
+      Icons.medical_services_outlined,
+      Icons.favorite_border,
+      Icons.credit_card_outlined,
+      Icons.check,
+    ];
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      child: Row(
-        children: List.generate(labels.length, (i) {
-          final active = i <= _step;
-          final current = i == _step;
-          return Expanded(
-            child: Column(
-              children: [
-                Container(
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: active ? AppColors.primary : AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 18),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stepWidth = constraints.maxWidth / labels.length;
+          return Column(
+            children: [
+              SizedBox(
+                height: 34,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    for (var i = 0; i < labels.length - 1; i++)
+                      Positioned(
+                        left: stepWidth * (i + 0.5),
+                        top: 16,
+                        width: stepWidth,
+                        height: 2,
+                        child: i < _step
+                            ? const ColoredBox(color: AppColors.primary)
+                            : CustomPaint(
+                                painter: _DottedLinePainter(
+                                  color: AppColors.border,
+                                ),
+                              ),
+                      ),
+                    Row(
+                      children: List.generate(labels.length, (i) {
+                        return Expanded(
+                          child: Center(
+                            child: _StepDot(
+                              icon: icons[i],
+                              active: i <= _step,
+                              current: i == _step,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  labels[i],
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: current ? FontWeight.w700 : FontWeight.w500,
-                    color: current
-                        ? AppColors.primary
-                        : active
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(labels.length, (i) {
+                  final current = i == _step;
+                  final active = i <= _step;
+                  return Expanded(
+                    child: Text(
+                      labels[i],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            current ? FontWeight.w700 : FontWeight.w500,
+                        color: current
+                            ? AppColors.primary
+                            : active
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           );
-        }),
+        },
       ),
     );
   }
@@ -315,11 +357,15 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
 
   Widget _buildDescribeStep() {
     return _stepScaffold(
-      title: 'Describe your issue',
-      subtitle: 'Select one or more areas of concern and describe symptoms',
+      title: '',
+      hideTitle: true,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           BodyDiagramWidget(
+            gender: context.select<AuthViewModel, String?>(
+              (auth) => auth.user?.gender,
+            ),
             selectedAreas: _bodyAreas,
             onAreaToggled: (area) => setState(() {
               if (_bodyAreas.contains(area)) {
@@ -329,26 +375,16 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
               }
             }),
           ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _descriptionController,
-            maxLines: 4,
-            textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              labelText: 'Description of issue',
-              hintText: 'Describe your symptoms...',
-              alignLabelWithHint: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 1.6,
-                ),
-              ),
-            ),
+          const SizedBox(height: 28),
+          Text(
+            'How severe is the issue?',
+            style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          _IssueSeverityPicker(
+            value: _issueSeverity,
+            onChanged: (severity) =>
+                setState(() => _issueSeverity = severity),
           ),
         ],
       ),
@@ -361,9 +397,9 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
           );
           return;
         }
-        if (_descriptionController.text.trim().isEmpty) {
+        if (_issueSeverity == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please describe your issue')),
+            const SnackBar(content: Text('Please select issue severity')),
           );
           return;
         }
@@ -398,37 +434,111 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
 
   Widget _buildConfirmStep() {
     final fee = widget.doctor.fee;
-    return _stepScaffold(
-      title: 'Booking summary',
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.highlight,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+    final details = <_ConfirmDetail>[
+      _ConfirmDetail(Icons.person_outline, 'Patient', _appointmentForLabel),
+      if (_bodyAreas.isNotEmpty)
+        _ConfirmDetail(
+          Icons.accessibility_new_outlined,
+          'Issue area',
+          BodyDiagramWidget.formatAreas(_bodyAreas),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _summaryRow('Doctor', widget.doctor.fullName),
-            _summaryRow('Specialty', widget.doctor.specialty),
-            _summaryRow('For', _appointmentForLabel),
-            if (_bodyAreas.isNotEmpty)
-              _summaryRow('Areas', BodyDiagramWidget.formatAreas(_bodyAreas)),
-            _summaryRow('Payment', _paymentLabel(_paymentMethod)),
-            const Divider(height: 28),
-            _summaryRow('Total', '£${fee.toInt()}', bold: true),
-          ],
+      if (_issueSeverity != null)
+        _ConfirmDetail(
+          Icons.favorite_border,
+          'Severity',
+          _issueSeverity!.label,
         ),
+      _ConfirmDetail(
+        Icons.credit_card_outlined,
+        'Payment',
+        _paymentLabel(_paymentMethod),
       ),
-      nextLabel: 'Confirm appointment',
-      onNext: _confirm,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Review booking',
+                  style: AppTypography.pageTitle.copyWith(fontSize: 24),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Check the details before you confirm',
+                  style: AppTypography.bodySecondary,
+                ),
+                const SizedBox(height: 20),
+                _ConfirmDoctorCard(doctor: widget.doctor),
+                const SizedBox(height: 12),
+                _ConfirmDetailsCard(details: details),
+              ],
+            ),
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  border: Border(top: BorderSide(color: AppColors.border)),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Total due',
+                      style: AppTypography.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '£${fee.toInt()}',
+                      style: AppTypography.pageTitle.copyWith(
+                        fontSize: 22,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                child: ElevatedButton(
+                  onPressed: _confirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.surface,
+                    minimumSize: const Size.fromHeight(52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    textStyle: AppTypography.button.copyWith(fontSize: 17),
+                  ),
+                  child: const Text('Confirm booking'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _stepScaffold({
     required String title,
     String? subtitle,
+    bool hideTitle = false,
     required Widget child,
     required VoidCallback onNext,
     String nextLabel = 'Continue',
@@ -443,15 +553,17 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  title,
-                  style: AppTypography.pageTitle.copyWith(fontSize: 26),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 8),
-                  Text(subtitle, style: AppTypography.bodySecondary),
+                if (!hideTitle) ...[
+                  Text(
+                    title,
+                    style: AppTypography.pageTitle.copyWith(fontSize: 26),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 8),
+                    Text(subtitle, style: AppTypography.bodySecondary),
+                  ],
+                  const SizedBox(height: 24),
                 ],
-                const SizedBox(height: 24),
                 child,
               ],
             ),
@@ -613,30 +725,6 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 88,
-            child: Text(label, style: AppTypography.bodySecondary),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: AppTypography.body.copyWith(
-                fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _paymentLabel(PaymentMethodType method) {
     switch (method) {
       case PaymentMethodType.debitCard:
@@ -650,5 +738,252 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
       case PaymentMethodType.paypal:
         return 'PayPal';
     }
+  }
+}
+
+class _ConfirmDetail {
+  const _ConfirmDetail(this.icon, this.label, this.value);
+
+  final IconData icon;
+  final String label;
+  final String value;
+}
+
+class _ConfirmDoctorCard extends StatelessWidget {
+  const _ConfirmDoctorCard({required this.doctor});
+
+  final Doctor doctor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: AppColors.highlight,
+            child: Text(
+              doctor.firstName.isNotEmpty ? doctor.firstName[0] : '?',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  doctor.fullName,
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(doctor.specialty, style: AppTypography.bodySecondary),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfirmDetailsCard extends StatelessWidget {
+  const _ConfirmDetailsCard({required this.details});
+
+  final List<_ConfirmDetail> details;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < details.length; i++) ...[
+            if (i > 0) const Divider(height: 1, indent: 52),
+            _ConfirmDetailRow(detail: details[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfirmDetailRow extends StatelessWidget {
+  const _ConfirmDetailRow({required this.detail});
+
+  final _ConfirmDetail detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(detail.icon, size: 22, color: AppColors.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  detail.label,
+                  style: AppTypography.bodySecondary.copyWith(fontSize: 12),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  detail.value,
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  const _StepDot({
+    required this.icon,
+    required this.active,
+    required this.current,
+  });
+
+  final IconData icon;
+  final bool active;
+  final bool current;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = active ? AppColors.primary : AppColors.border;
+    final iconColor = active ? AppColors.surface : AppColors.textSecondary;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: active ? AppColors.primary : AppColors.surface,
+        border: Border.all(
+          color: borderColor,
+          width: current ? 2 : 1.4,
+        ),
+      ),
+      child: Icon(icon, size: 17, color: iconColor),
+    );
+  }
+}
+
+class _IssueSeverityPicker extends StatelessWidget {
+  const _IssueSeverityPicker({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final IssueSeverity? value;
+  final ValueChanged<IssueSeverity> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: IssueSeverity.values.map((severity) {
+          final selected = value == severity;
+          return Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => onChanged(severity),
+                borderRadius: BorderRadius.circular(10),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: selected ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        severity.emoji,
+                        style: const TextStyle(fontSize: 18),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        severity.label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: selected
+                              ? AppColors.surface
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _DottedLinePainter extends CustomPainter {
+  _DottedLinePainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const dashWidth = 4.0;
+    const dashSpace = 4.0;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    var startX = 0.0;
+    final y = size.height / 2;
+    while (startX < size.width) {
+      canvas.drawLine(Offset(startX, y), Offset(startX + dashWidth, y), paint);
+      startX += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedLinePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
