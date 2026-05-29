@@ -5,4 +5,6 @@ class ApiConfig {
 
   // API Endpoints
   static const String login = '/login';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
 }

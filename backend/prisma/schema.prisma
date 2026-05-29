@@ -48,6 +48,7 @@ model User {
   doctor             Doctor?
   patient            Patient?
   sessions           Session[]
+  passwordResets     PasswordReset[]
   documents          Document[]
 }
 
@@ -124,6 +125,18 @@ model Session {
   refreshTokenHash String
   expiresAt        DateTime
   createdAt        DateTime @default(now())
+}
+
+model PasswordReset {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
 }
 
 model Document {

@@ -8,6 +8,14 @@ export function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+export function generatePasswordResetToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+export function hashPasswordResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
 export function parseDurationToMs(duration: string): number {
   const match = /^(\d+)([smhd])$/i.exec(duration.trim());
   if (!match) {

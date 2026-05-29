@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:medigo_mobile/models/doctor_registration_request.dart';
+import 'package:medigo_mobile/models/forgot_password_request.dart';
 import 'package:medigo_mobile/models/login_request.dart';
 import 'package:medigo_mobile/models/login_response.dart';
+import 'package:medigo_mobile/models/message_response.dart';
 import 'package:medigo_mobile/models/patient_registration_request.dart';
+import 'package:medigo_mobile/models/reset_password_request.dart';
 import 'package:medigo_mobile/repositories/i_auth_repository.dart';
 import 'package:medigo_mobile/utils/app_exception.dart';
 
@@ -102,5 +105,51 @@ class MockAuthRepository implements IAuthRepository {
         'success': true,
       });
     }
+  }
+
+  @override
+  Future<MessageResponse> forgotPassword(ForgotPasswordRequest request) async {
+    await Future.delayed(_delay);
+
+    if (request.email.isEmpty) {
+      throw const ValidationException('Email is required');
+    }
+
+    return const MessageResponse(
+      success: true,
+      message:
+          'If an account exists for this email, you will receive password reset instructions shortly.',
+    );
+  }
+
+  @override
+  Future<MessageResponse> resetPassword(ResetPasswordRequest request) async {
+    await Future.delayed(_delay);
+
+    if (request.token.isEmpty) {
+      throw const ValidationException('Reset code is required');
+    }
+
+    if (request.token == 'invalid') {
+      throw const AuthException('Invalid or expired reset token');
+    }
+
+    final passwordError = _validateMockPassword(request.password);
+    if (passwordError != null) {
+      throw ValidationException(passwordError);
+    }
+
+    return const MessageResponse(
+      success: true,
+      message:
+          'Password updated successfully. You can sign in with your new password.',
+    );
+  }
+
+  String? _validateMockPassword(String password) {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    return null;
   }
 }
