@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/services/safety_preferences_service.dart';
 
@@ -78,7 +79,7 @@ class _DeviceLockScreenState extends State<DeviceLockScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
-                            'Require a PIN or biometric (fingerprint / face) to open Medigo. This helps protect your health and visit data if someone else has access to your device.',
+                            'Require a PIN or biometric (fingerprint / face) to open $kAppDisplayName. This helps protect your health and visit data if someone else has access to your device.',
                             style: AppTypography.body.copyWith(
                               fontSize: 14,
                               height: 1.4,

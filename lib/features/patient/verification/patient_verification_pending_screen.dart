@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/utils/patient_navigation.dart';
@@ -173,7 +174,7 @@ class _PatientVerificationHeader extends StatelessWidget {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 16),
       child: Text(
-        'Medi Go',
+        kAppDisplayName,
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 20,

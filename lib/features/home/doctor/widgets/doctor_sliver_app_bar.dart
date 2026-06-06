@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medigo_mobile/features/home/doctor/doctor_profile_screen.dart';
 import 'package:medigo_mobile/features/home/shared/safety_checkup_screen.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:provider/provider.dart';
@@ -51,7 +52,7 @@ class DoctorSliverAppBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  'MediGo',
+                  kAppDisplayName,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,

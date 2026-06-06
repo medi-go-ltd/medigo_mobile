@@ -336,7 +336,7 @@ class _BodyImagePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final zones = _zonesForSide(side);
+    final zones = _zonesForSide(side, gender: gender);
     final aspectRatio = _bodyAspectRatio(side: side, gender: gender);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -440,8 +440,15 @@ class _BodyZone {
   final Rect glowRect;
 }
 
-List<_BodyZone> _zonesForSide(BodyViewSide side) {
-  return side == BodyViewSide.front ? _frontZones : _backZones;
+bool _isFemaleGender(String? gender) =>
+    gender?.trim().toLowerCase() == 'female';
+
+List<_BodyZone> _zonesForSide(BodyViewSide side, {String? gender}) {
+  final isFemale = _isFemaleGender(gender);
+  if (side == BodyViewSide.front) {
+    return isFemale ? _femaleFrontZones : _maleFrontZones;
+  }
+  return isFemale ? _femaleBackZones : _maleBackZones;
 }
 
 List<String> _hitOrderForSide(BodyViewSide side) {
@@ -631,7 +638,8 @@ const _backHitOrder = [
   'Upper Back',
 ];
 
-final _frontZones = [
+/// Tap/glow zones tuned to [body_front_male.png] / [body_back_male.png].
+final _maleFrontZones = [
   _bodyHeadZone('Head', 0.540, 0.082),
   _bodyZone('Throat', 0.540, 0.182, 0.035),
   _bodyZone('Neck', 0.540, 0.151, 0.040),
@@ -660,7 +668,7 @@ final _frontZones = [
   _bodyFootZone('Right Foot', 0.421, 0.955, 0.055, 0.020),
 ];
 
-final _backZones = [
+final _maleBackZones = [
   _bodyHeadZone('Head', 0.459, 0.082),
   _bodyZone('Neck', 0.458, 0.151, 0.040),
   _bodyZone('Left Shoulder', 0.248, 0.211, 0.065),
@@ -686,6 +694,64 @@ final _backZones = [
   _bodyAnkleZone('Right Ankle', 0.578, 0.877),
   _bodyFootZone('Left Foot', 0.252, 0.958, 0.072, 0.018),
   _bodyFootZone('Right Foot', 0.580, 0.958, 0.072, 0.018),
+];
+
+/// Tap/glow zones tuned to [body_front_female.png] / [body_back_female.png].
+final _femaleFrontZones = [
+  _bodyHeadZone('Head', 0.500, 0.090),
+  _bodyZone('Throat', 0.500, 0.186, 0.035),
+  _bodyZone('Neck', 0.500, 0.156, 0.040),
+  _bodyZone('Left Shoulder', 0.698, 0.216, 0.062),
+  _bodyZone('Right Shoulder', 0.358, 0.216, 0.062),
+  _bodyZone('Chest', 0.500, 0.302, 0.082),
+  _bodyZone('Abdomen', 0.500, 0.400, 0.075),
+  _bodyZone('Pelvis', 0.500, 0.508, 0.074),
+  _bodyZone('Left Arm', 0.788, 0.438, 0.052),
+  _bodyZone('Right Arm', 0.288, 0.438, 0.052),
+  _bodyZone('Left Elbow', 0.808, 0.488, 0.040),
+  _bodyZone('Right Elbow', 0.268, 0.488, 0.040),
+  _bodyZone('Left Wrist', 0.858, 0.565, 0.034),
+  _bodyZone('Right Wrist', 0.218, 0.565, 0.034),
+  _bodyZone('Left Hand', 0.638, 0.652, 0.043),
+  _bodyZone('Right Hand', 0.428, 0.652, 0.043),
+  _bodyZone('Left Hip', 0.598, 0.556, 0.050),
+  _bodyZone('Right Hip', 0.478, 0.556, 0.050),
+  _bodyLegZone('Left Leg', 0.618, 0.752, 0.048, 0.098),
+  _bodyLegZone('Right Leg', 0.418, 0.752, 0.048, 0.098),
+  _bodyZone('Left Knee', 0.618, 0.710, 0.046),
+  _bodyZone('Right Knee', 0.418, 0.710, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.632, 0.882),
+  _bodyAnkleZone('Right Ankle', 0.422, 0.882),
+  _bodyFootZone('Left Foot', 0.628, 0.958, 0.052, 0.020),
+  _bodyFootZone('Right Foot', 0.425, 0.958, 0.052, 0.020),
+];
+
+final _femaleBackZones = [
+  _bodyHeadZone('Head', 0.502, 0.088),
+  _bodyZone('Neck', 0.502, 0.156, 0.038),
+  _bodyZone('Left Shoulder', 0.268, 0.216, 0.062),
+  _bodyZone('Right Shoulder', 0.638, 0.216, 0.062),
+  _bodyZone('Upper Back', 0.502, 0.302, 0.085),
+  _bodyZone('Lower Back', 0.502, 0.456, 0.070),
+  _bodyZone('Pelvis', 0.502, 0.514, 0.078),
+  _bodyZone('Left Arm', 0.188, 0.438, 0.052),
+  _bodyZone('Right Arm', 0.728, 0.438, 0.052),
+  _bodyZone('Left Elbow', 0.758, 0.488, 0.040),
+  _bodyZone('Right Elbow', 0.162, 0.488, 0.040),
+  _bodyZone('Left Wrist', 0.818, 0.565, 0.034),
+  _bodyZone('Right Wrist', 0.102, 0.565, 0.034),
+  _bodyZone('Left Hand', 0.338, 0.650, 0.043),
+  _bodyZone('Right Hand', 0.578, 0.650, 0.043),
+  _bodyZone('Left Hip', 0.398, 0.554, 0.050),
+  _bodyZone('Right Hip', 0.558, 0.554, 0.050),
+  _bodyLegZone('Left Leg', 0.348, 0.752, 0.048, 0.096),
+  _bodyLegZone('Right Leg', 0.558, 0.752, 0.048, 0.096),
+  _bodyZone('Left Knee', 0.356, 0.726, 0.046),
+  _bodyZone('Right Knee', 0.556, 0.726, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.338, 0.880),
+  _bodyAnkleZone('Right Ankle', 0.568, 0.880),
+  _bodyFootZone('Left Foot', 0.268, 0.958, 0.068, 0.018),
+  _bodyFootZone('Right Foot', 0.572, 0.958, 0.068, 0.018),
 ];
 
 String _assetForArea(String area) {

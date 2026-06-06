@@ -19,7 +19,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Welcome to MediGo'), findsOneWidget);
+      expect(find.text('Welcome to Medi-Go'), findsOneWidget);
       expect(find.text('Terms & Conditions'), findsOneWidget);
       expect(find.text('Community Standards'), findsOneWidget);
       expect(find.text('Domestic Violence Declaration'), findsOneWidget);

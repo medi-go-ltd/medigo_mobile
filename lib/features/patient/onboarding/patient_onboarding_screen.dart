@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/services/onboarding_preferences_service.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
@@ -94,7 +95,7 @@ class _PatientOnboardingScreenState extends State<PatientOnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Welcome to MediGo', style: AppTypography.pageTitle),
+          Text('Welcome to $kAppDisplayName', style: AppTypography.pageTitle),
           const SizedBox(height: 8),
           const Text(
             'Please review and accept the following before using the app.',

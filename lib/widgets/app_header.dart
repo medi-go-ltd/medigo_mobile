@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/widgets/app_back_button.dart';
 
@@ -35,7 +36,7 @@ class AppHeader extends StatelessWidget {
                 ),
               ),
               Text(
-                'MediGo',
+                kAppDisplayName,
                 style: AppTypography.pageTitle.copyWith(
                   fontSize: 40,
                   fontWeight: FontWeight.w700,
