@@ -63,6 +63,7 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
   String? _profileImageError;
   final List<String> _selectedSpecialisations = [];
   List<String> _qualificationsFilePaths = [];
+  String? _professionalIndemnityInsuranceFilePath;
   String? _photoIdFilePath;
   bool _dbsConsentGiven = false;
 
@@ -143,6 +144,17 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
       );
       return false;
     }
+    if (_professionalIndemnityInsuranceFilePath == null ||
+        _professionalIndemnityInsuranceFilePath!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please upload proof of Professional Indemnity Insurance',
+          ),
+        ),
+      );
+      return false;
+    }
     if (_photoIdFilePath == null || _photoIdFilePath!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -189,6 +201,8 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
           : double.tryParse(_callOutFeeController.text.trim()),
       radiusKm: double.parse(_radiusController.text.trim()),
       qualificationsFilePaths: _qualificationsFilePaths,
+      professionalIndemnityInsuranceFilePath:
+          _professionalIndemnityInsuranceFilePath,
       photoIdFilePath: _photoIdFilePath,
       dbsConsentGiven: _dbsConsentGiven,
     );
@@ -505,6 +519,16 @@ class _DoctorSignupScreenState extends State<DoctorSignupScreen> {
               onFilesChanged: (paths) =>
                   setState(() => _qualificationsFilePaths = paths),
               maxFiles: 10,
+              acceptCamera: true,
+            ),
+            const SizedBox(height: 16),
+            FileUploadField(
+              label: 'Professional Indemnity Insurance',
+              filePath: _professionalIndemnityInsuranceFilePath,
+              onFileSelected: (path) => setState(
+                () => _professionalIndemnityInsuranceFilePath =
+                    path.isEmpty ? null : path,
+              ),
               acceptCamera: true,
             ),
             const SizedBox(height: 16),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/utils/patient_navigation.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
@@ -15,7 +16,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
     this.onFinished,
-    this.title = 'MediGo',
+    this.title = kAppDisplayName,
     this.logoAsset = 'assets/images/app-logo.png',
   });
 

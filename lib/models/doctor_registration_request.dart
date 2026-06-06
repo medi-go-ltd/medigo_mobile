@@ -15,6 +15,7 @@ class DoctorRegistrationRequest {
   final double? callOutFee;
   final double radiusKm;
   final List<String> qualificationsFilePaths;
+  final String? professionalIndemnityInsuranceFilePath;
   final String? photoIdFilePath;
   final bool dbsConsentGiven;
 
@@ -33,6 +34,7 @@ class DoctorRegistrationRequest {
     this.callOutFee,
     required this.radiusKm,
     required this.qualificationsFilePaths,
+    this.professionalIndemnityInsuranceFilePath,
     this.photoIdFilePath,
     required this.dbsConsentGiven,
   });
@@ -53,6 +55,8 @@ class DoctorRegistrationRequest {
       'callOutFee': callOutFee,
       'radiusKm': radiusKm,
       'qualificationsFilePaths': qualificationsFilePaths,
+      'professionalIndemnityInsuranceFilePath':
+          professionalIndemnityInsuranceFilePath,
       'photoIdFilePath': photoIdFilePath,
       'dbsConsentGiven': dbsConsentGiven,
     };

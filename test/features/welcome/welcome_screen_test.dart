@@ -27,7 +27,7 @@ void main() {
       await tester.pumpWidget(buildTestWidget(const WelcomeScreen()));
       await tester.pump();
 
-      expect(find.text('Medi Go'), findsOneWidget);
+      expect(find.text('Medi-Go'), findsOneWidget);
       expect(find.text('Welcome'), findsOneWidget);
       expect(find.text('Sign in as Doctor'), findsOneWidget);
       expect(find.text('Sign in as Patient'), findsOneWidget);

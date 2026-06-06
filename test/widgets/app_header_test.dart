@@ -14,7 +14,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('MediGo'), findsOneWidget);
+      expect(find.text('Medi-Go'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
     });
 
@@ -42,7 +42,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsNothing);
-      expect(find.text('MediGo'), findsOneWidget);
+      expect(find.text('Medi-Go'), findsOneWidget);
     });
 
     testWidgets('uses custom onBackPressed callback', (

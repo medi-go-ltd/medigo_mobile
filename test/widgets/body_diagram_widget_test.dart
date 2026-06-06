@@ -97,6 +97,30 @@ void main() {
     expect(toggled, 'Head');
   });
 
+  testWidgets('tap on female diagram selects head region', (tester) async {
+    String? toggled;
+
+    await tester.pumpWidget(
+      _wrap(
+        BodyDiagramWidget(
+          gender: 'Female',
+          onAreaToggled: (area) => toggled = area,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final diagramBox = tester.renderObject<RenderBox>(
+      find.byKey(const ValueKey('body-map-front-panel')),
+    );
+    final size = diagramBox.size;
+    final localTap = Offset(size.width * 0.50, size.height * 0.09);
+    await tester.tapAt(diagramBox.localToGlobal(localTap));
+    await tester.pump();
+
+    expect(toggled, 'Head');
+  });
+
   testWidgets('tap on diagram selects leg region', (tester) async {
     String? toggled;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/constants/registration_assets.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
@@ -337,7 +338,7 @@ class PatientRegistrationSuccessScreen extends StatelessWidget {
       scheme: 'mailto',
       path: _supportEmail,
       queryParameters: const {
-        'subject': 'Medi Go registration question',
+        'subject': '$kAppDisplayName registration question',
       },
     );
     if (await canLaunchUrl(uri)) {

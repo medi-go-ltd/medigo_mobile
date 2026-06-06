@@ -1,4 +1,5 @@
 import 'package:medigo_mobile/utils/address_utils.dart';
+import 'package:medigo_mobile/utils/date_utils.dart';
 
 class ValidationUtils {
   static String? validateFirstName(String? value) {
@@ -194,6 +195,29 @@ class ValidationUtils {
     if (years == null || years < 0 || years > 60) {
       return 'Please enter a valid number (0-60)';
     }
+    return null;
+  }
+
+  static String? validateUkDateOfBirth(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Date of birth is required';
+    }
+
+    final date = UkDateUtils.parseUk(value);
+    if (date == null) {
+      return 'Please enter a valid date (DD/MM/YYYY)';
+    }
+
+    final today = DateTime.now();
+    final todayDate = DateTime(today.year, today.month, today.day);
+    if (date.isAfter(todayDate)) {
+      return 'Date of birth cannot be in the future';
+    }
+
+    if (date.year < 1920) {
+      return 'Please enter a valid date of birth';
+    }
+
     return null;
   }
 }

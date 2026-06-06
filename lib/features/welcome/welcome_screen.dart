@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
@@ -48,7 +49,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: Column(
                 children: [
                   _buildLogo(),
-                  const Text('Medi Go', style: AppTypography.heroTitle),
+                  const Text(kAppDisplayName, style: AppTypography.heroTitle),
                   const SizedBox(height: 20),
                   const Text('Welcome', style: AppTypography.heroSubtitle),
                   const SizedBox(height: 20),

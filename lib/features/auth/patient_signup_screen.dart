@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medigo_mobile/models/patient_registration_request.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/utils/date_utils.dart';
 import 'package:medigo_mobile/utils/validation_utils.dart';
 import 'package:medigo_mobile/view_models/signup_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
@@ -124,13 +125,15 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
+      locale: UkDateUtils.ukLocale,
       initialDate: DateTime(now.year - 30),
       firstDate: DateTime(1920),
       lastDate: now,
+      helpText: 'Select date of birth',
+      fieldLabelText: 'Date of birth',
     );
     if (picked != null) {
-      _dob.text =
-          '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      _dob.text = UkDateUtils.formatUk(picked);
     }
   }
 
@@ -337,10 +340,16 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
       return;
     }
 
+    final dobIso = UkDateUtils.ukDisplayToIso(_dob.text.trim());
+    if (dobIso == null) {
+      _showError('Please enter a valid date of birth (DD/MM/YYYY)');
+      return;
+    }
+
     final request = PatientRegistrationRequest(
       firstName: _firstName.text.trim(),
       lastName: _lastName.text.trim(),
-      dateOfBirth: _dob.text.trim(),
+      dateOfBirth: dobIso,
       gender: _gender,
       genderAtBirth: _genderAtBirth,
       profileImagePath: _profileImagePath,
@@ -525,8 +534,7 @@ class _PatientSignupScreenState extends State<PatientSignupScreen> {
               onTap: _pickDate,
               onFieldSubmitted: (_) =>
                   FocusScope.of(context).requestFocus(_emailFocus),
-              validator: (v) =>
-                  v == null || v.isEmpty ? 'Date of birth is required' : null,
+              validator: ValidationUtils.validateUkDateOfBirth,
               required: true,
             ),
             const SizedBox(height: 16),

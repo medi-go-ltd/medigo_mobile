@@ -12,7 +12,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(SplashScreen), findsOneWidget);
-      expect(find.text('MediGo'), findsOneWidget);
+      expect(find.text('Medi-Go'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
     });
 

@@ -63,6 +63,10 @@ export class RegisterDoctorDto {
 
   @IsOptional()
   @IsString()
+  professionalIndemnityInsuranceFilePath?: string;
+
+  @IsOptional()
+  @IsString()
   photoIdFilePath?: string;
 
   @IsBoolean()

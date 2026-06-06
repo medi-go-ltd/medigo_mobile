@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/constants/app_branding.dart';
 import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
@@ -84,6 +85,7 @@ class VerificationPendingScreen extends StatelessWidget {
         : [
             'GMC number validation',
             'Medical qualifications and certificates',
+            'Professional Indemnity Insurance',
             'Photo ID verification',
             'Enhanced DBS check',
           ];
@@ -194,7 +196,7 @@ class AppVerificationHeader extends StatelessWidget {
           ),
           const Expanded(
             child: Text(
-              'Medi Go',
+              kAppDisplayName,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20,
