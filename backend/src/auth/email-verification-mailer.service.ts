@@ -11,9 +11,7 @@ export class EmailVerificationMailerService {
     const nodeEnv = this.configService.get<string>('NODE_ENV') ?? 'development';
 
     if (nodeEnv !== 'production') {
-      this.logger.log(
-        `Email verification code for ${email}: ${code}`,
-      );
+      this.logger.log(`Email verification code for ${email}: ${code}`);
       return;
     }
 

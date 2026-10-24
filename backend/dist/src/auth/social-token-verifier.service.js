@@ -28,7 +28,10 @@ let SocialTokenVerifierService = SocialTokenVerifierService_1 = class SocialToke
     async verify(provider, idToken, options = {}) {
         if (this.allowInsecureTokens()) {
             const claims = this.decodeWithoutVerification(provider, idToken);
-            return { ...claims, email: claims.email ?? options.insecureFallbackEmail };
+            return {
+                ...claims,
+                email: claims.email ?? options.insecureFallbackEmail,
+            };
         }
         const { rawNonce } = options;
         const audience = this.audiencesFor(provider);

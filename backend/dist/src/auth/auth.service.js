@@ -208,7 +208,9 @@ let AuthService = class AuthService {
         });
         if (!record || record.expiresAt < new Date()) {
             if (record) {
-                await this.prisma.emailVerification.delete({ where: { id: record.id } });
+                await this.prisma.emailVerification.delete({
+                    where: { id: record.id },
+                });
             }
             throw new common_1.BadRequestException('Invalid or expired verification code');
         }

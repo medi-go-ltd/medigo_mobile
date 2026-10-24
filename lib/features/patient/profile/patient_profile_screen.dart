@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:medigo_mobile/features/patient/family/family_members_screen.dart';
 import 'package:medigo_mobile/features/patient/profile/complete_patient_profile_screen.dart';
 import 'package:medigo_mobile/models/verification_status.dart';
 import 'package:medigo_mobile/services/profile_completion_service.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/utils/date_utils.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
+import 'package:medigo_mobile/view_models/family_view_model.dart';
 import 'package:provider/provider.dart';
 
 class PatientProfileScreen extends StatefulWidget {
@@ -30,6 +32,9 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
 
   Future<void> _loadExtras() async {
     final user = context.read<AuthViewModel>().user;
+    if (user != null) {
+      context.read<FamilyViewModel>().loadFor(user.id);
+    }
     final dobIso = await ProfileCompletionService.getDateOfBirth();
     final deferred = await ProfileCompletionService.getDeferredProfile();
     final incomplete = await ProfileCompletionService.isProfileIncomplete(user);
@@ -204,6 +209,17 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
                         ),
                       ],
                       const SizedBox(height: 28),
+                      const _SectionLabel('Family'),
+                      const SizedBox(height: 12),
+                      _FamilyRow(
+                        count: context.watch<FamilyViewModel>().members.length,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const FamilyMembersScreen(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
                       OutlinedButton(
                         onPressed: _openEditor,
                         style: OutlinedButton.styleFrom(
@@ -277,6 +293,68 @@ class _IncompleteBanner extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.chevron_right, color: AppColors.primary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FamilyRow extends StatelessWidget {
+  const _FamilyRow({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = count == 0
+        ? 'Add people you book visits for'
+        : count == 1
+        ? '1 family member'
+        : '$count family members';
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border, width: 1.2),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.family_restroom_outlined,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'My family',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySecondary.copyWith(
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),

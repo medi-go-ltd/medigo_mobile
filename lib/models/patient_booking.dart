@@ -1,4 +1,5 @@
 import 'package:medigo_mobile/models/doctor.dart';
+import 'package:medigo_mobile/models/family_member.dart';
 
 enum PatientBookingStatus {
   draft,
@@ -10,15 +11,7 @@ enum PatientBookingStatus {
   completed,
 }
 
-enum BookingFor { myself, someoneElse }
-
-enum PaymentMethodType {
-  debitCard,
-  creditCard,
-  applePay,
-  googlePay,
-  paypal,
-}
+enum PaymentMethodType { debitCard, creditCard, applePay, googlePay, paypal }
 
 enum IssueSeverity { mild, moderate, severe, verySevere }
 
@@ -84,15 +77,63 @@ class TriageAnswers {
   }
 }
 
-class PatientBooking {
-  final String id;
-  final Doctor doctor;
-  final BookingFor bookingFor;
-  final String? otherPersonName;
+/// One person being seen during a visit, with their own screening answers.
+class BookingPatient {
+  /// Null when the patient is the account holder.
+  final FamilyMember? member;
   final TriageAnswers triage;
-  final List<String>? _bodyAreas;
+  final List<String> bodyAreas;
   final IssueSeverity? issueSeverity;
   final String description;
+
+  const BookingPatient({
+    this.member,
+    this.triage = const TriageAnswers(),
+    this.bodyAreas = const [],
+    this.issueSeverity,
+    this.description = '',
+  });
+
+  bool get isAccountHolder => member == null;
+
+  /// Stable key for selection: the member id, or 'self'.
+  String get key => member?.id ?? 'self';
+
+  /// e.g. "Myself" or "Leo Smith (Child, 4 yrs)".
+  String get label {
+    final m = member;
+    if (m == null) return 'Myself';
+    return '${m.fullName} (${m.relationship.label}, ${m.ageLabel})';
+  }
+
+  BookingPatient copyWith({
+    TriageAnswers? triage,
+    List<String>? bodyAreas,
+    IssueSeverity? issueSeverity,
+    String? description,
+  }) {
+    return BookingPatient(
+      member: member,
+      triage: triage ?? this.triage,
+      bodyAreas: bodyAreas ?? this.bodyAreas,
+      issueSeverity: issueSeverity ?? this.issueSeverity,
+      description: description ?? this.description,
+    );
+  }
+}
+
+class PatientBooking {
+  /// Each patient after the first is charged this fraction of the fee.
+  static const additionalPatientRate = 0.5;
+
+  static double totalFee(double baseFee, int patientCount) {
+    if (patientCount <= 1) return baseFee;
+    return baseFee + baseFee * additionalPatientRate * (patientCount - 1);
+  }
+
+  final String id;
+  final Doctor doctor;
+  final List<BookingPatient> patients;
   final PaymentMethodType paymentMethod;
   final double amount;
   final PatientBookingStatus status;
@@ -102,17 +143,10 @@ class PatientBooking {
   final String? review;
   final bool isNearestDoctor;
 
-  List<String> get bodyAreas => _bodyAreas ?? const [];
-
   PatientBooking({
     required this.id,
     required this.doctor,
-    this.bookingFor = BookingFor.myself,
-    this.otherPersonName,
-    this.triage = const TriageAnswers(),
-    List<String>? bodyAreas,
-    this.issueSeverity,
-    this.description = '',
+    this.patients = const [BookingPatient()],
     this.paymentMethod = PaymentMethodType.debitCard,
     required this.amount,
     this.status = PatientBookingStatus.draft,
@@ -121,17 +155,12 @@ class PatientBooking {
     this.rating,
     this.review,
     this.isNearestDoctor = false,
-  }) : _bodyAreas = bodyAreas ?? const [];
+  });
 
   PatientBooking copyWith({
     String? id,
     Doctor? doctor,
-    BookingFor? bookingFor,
-    String? otherPersonName,
-    TriageAnswers? triage,
-    List<String>? bodyAreas,
-    IssueSeverity? issueSeverity,
-    String? description,
+    List<BookingPatient>? patients,
     PaymentMethodType? paymentMethod,
     double? amount,
     PatientBookingStatus? status,
@@ -144,12 +173,7 @@ class PatientBooking {
     return PatientBooking(
       id: id ?? this.id,
       doctor: doctor ?? this.doctor,
-      bookingFor: bookingFor ?? this.bookingFor,
-      otherPersonName: otherPersonName ?? this.otherPersonName,
-      triage: triage ?? this.triage,
-      bodyAreas: bodyAreas ?? this.bodyAreas,
-      issueSeverity: issueSeverity ?? this.issueSeverity,
-      description: description ?? this.description,
+      patients: patients ?? this.patients,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       amount: amount ?? this.amount,
       status: status ?? this.status,
@@ -160,6 +184,11 @@ class PatientBooking {
       isNearestDoctor: isNearestDoctor ?? this.isNearestDoctor,
     );
   }
+
+  bool get isUrgent => patients.any((p) => p.triage.isUrgent);
+
+  /// e.g. "Myself" or "Myself, Leo Smith (Child, 4 yrs)".
+  String get appointmentForLabel => patients.map((p) => p.label).join(', ');
 
   String get paymentMethodLabel {
     switch (paymentMethod) {

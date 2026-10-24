@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
+import 'package:medigo_mobile/view_models/family_view_model.dart';
 import 'package:medigo_mobile/view_models/forgot_password_view_model.dart';
 import 'package:medigo_mobile/view_models/login_view_model.dart';
 import 'package:medigo_mobile/view_models/patient_booking_view_model.dart';
@@ -27,6 +28,9 @@ class AppProviders {
     ),
     ChangeNotifierProvider<DoctorHomeViewModel>(
       create: (_) => DoctorHomeViewModel(),
+    ),
+    ChangeNotifierProvider<FamilyViewModel>(
+      create: (context) => FamilyViewModel(auth: context.read<AuthViewModel>()),
     ),
     ChangeNotifierProvider<PatientBookingViewModel>(
       create: (context) => PatientBookingViewModel(
