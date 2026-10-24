@@ -95,7 +95,10 @@ class _PatientOnboardingScreenState extends State<PatientOnboardingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Welcome to $kAppDisplayName', style: AppTypography.pageTitle),
+          const Text(
+            'Welcome to $kAppDisplayName',
+            style: AppTypography.pageTitle,
+          ),
           const SizedBox(height: 8),
           const Text(
             'Please review and accept the following before using the app.',
