@@ -49,37 +49,41 @@ class PatientVisitHistoryDetailScreen extends StatelessWidget {
               timeLabel: _formatTime(booking.createdAt),
               amount: booking.amount,
             ),
-            const SizedBox(height: 20),
-            _SectionCard(
-              icon: Icons.event_note_outlined,
-              iconColor: AppColors.primary,
-              iconBackground: AppColors.highlight,
-              title: 'Visit summary',
-              children: [
-                _InfoTile(
-                  icon: Icons.person_outline,
-                  label: 'Appointment for',
-                  value: _appointmentForLabel(booking),
-                ),
-                if (booking.bodyAreas.isNotEmpty)
+            for (final patient in booking.patients) ...[
+              const SizedBox(height: 20),
+              _SectionCard(
+                icon: Icons.event_note_outlined,
+                iconColor: AppColors.primary,
+                iconBackground: AppColors.highlight,
+                title: booking.patients.length > 1
+                    ? 'Visit summary · ${patient.member?.firstName ?? 'You'}'
+                    : 'Visit summary',
+                children: [
                   _InfoTile(
-                    icon: Icons.accessibility_new_outlined,
-                    label: booking.bodyAreas.length == 1
-                        ? 'Area of concern'
-                        : 'Areas of concern',
-                    value: BodyDiagramWidget.formatAreas(booking.bodyAreas),
+                    icon: Icons.person_outline,
+                    label: 'Appointment for',
+                    value: patient.label,
                   ),
-                if (booking.description.isNotEmpty)
-                  _InfoTile(
-                    icon: Icons.notes_outlined,
-                    label: 'Description',
-                    value: booking.description,
-                    multiline: true,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _TriageSection(triage: booking.triage),
+                  if (patient.bodyAreas.isNotEmpty)
+                    _InfoTile(
+                      icon: Icons.accessibility_new_outlined,
+                      label: patient.bodyAreas.length == 1
+                          ? 'Area of concern'
+                          : 'Areas of concern',
+                      value: BodyDiagramWidget.formatAreas(patient.bodyAreas),
+                    ),
+                  if (patient.description.isNotEmpty)
+                    _InfoTile(
+                      icon: Icons.notes_outlined,
+                      label: 'Description',
+                      value: patient.description,
+                      multiline: true,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _TriageSection(triage: patient.triage),
+            ],
             const SizedBox(height: 16),
             _SectionCard(
               icon: Icons.payments_outlined,
@@ -140,11 +144,6 @@ class PatientVisitHistoryDetailScreen extends StatelessWidget {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
-  }
-
-  static String _appointmentForLabel(PatientBooking booking) {
-    if (booking.bookingFor == BookingFor.myself) return 'Myself';
-    return booking.otherPersonName ?? 'Someone else';
   }
 }
 

@@ -113,7 +113,9 @@ export class AuthService {
 
   async socialSignIn(payload: SocialSignInDto) {
     if (payload.role !== 'patient') {
-      throw new BadRequestException('Social sign-in is only available for patients');
+      throw new BadRequestException(
+        'Social sign-in is only available for patients',
+      );
     }
 
     const claims = await this.socialTokenVerifier.verify(
@@ -217,7 +219,9 @@ export class AuthService {
 
     if (!record || record.expiresAt < new Date()) {
       if (record) {
-        await this.prisma.emailVerification.delete({ where: { id: record.id } });
+        await this.prisma.emailVerification.delete({
+          where: { id: record.id },
+        });
       }
       throw new BadRequestException('Invalid or expired verification code');
     }
@@ -366,14 +370,11 @@ export class AuthService {
     data: Parameters<PrismaService['user']['create']>[0]['data'],
   ): Promise<User> {
     try {
-      const { verificationStatus, ...rest } = data as typeof data & {
-        verificationStatus?: VerificationStatus;
-      };
+      const { verificationStatus, ...rest } = data;
       return await this.prisma.user.create({
         data: {
           ...rest,
-          verificationStatus:
-            verificationStatus ?? VerificationStatus.PENDING,
+          verificationStatus: verificationStatus ?? VerificationStatus.PENDING,
         },
       });
     } catch (error) {

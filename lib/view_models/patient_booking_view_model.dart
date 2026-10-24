@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/models/appointment_request.dart';
 import 'package:medigo_mobile/models/doctor.dart';
+import 'package:medigo_mobile/models/family_member.dart';
 import 'package:medigo_mobile/models/patient_booking.dart';
 import 'package:medigo_mobile/view_models/doctor_home_view_model.dart';
 import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
@@ -22,9 +23,8 @@ class PatientBookingViewModel extends ChangeNotifier {
   PatientBooking? get draft => _draft;
   PatientBooking? get activeBooking => _activeBooking;
   List<PatientBooking> get bookings => List.unmodifiable(_bookings);
-  List<PatientBooking> get pendingBookings => _bookings
-      .where((b) => b.status == PatientBookingStatus.pending)
-      .toList();
+  List<PatientBooking> get pendingBookings =>
+      _bookings.where((b) => b.status == PatientBookingStatus.pending).toList();
   List<PatientBooking> get activeBookings => _bookings
       .where(
         (b) =>
@@ -49,25 +49,49 @@ class PatientBookingViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateDraft({
-    BookingFor? bookingFor,
-    String? otherPersonName,
+  /// Sets who is being seen (null = the account holder), keeping answers
+  /// already entered for anyone still selected, and reprices the visit.
+  void setPatients(List<FamilyMember?> people) {
+    final draft = _draft;
+    if (draft == null || people.isEmpty) return;
+    final existing = {for (final p in draft.patients) p.key: p};
+    final patients = [
+      for (final person in people)
+        existing[person?.id ?? 'self'] ?? BookingPatient(member: person),
+    ];
+    _draft = draft.copyWith(
+      patients: patients,
+      amount: PatientBooking.totalFee(
+        draft.doctor.fee.toDouble(),
+        patients.length,
+      ),
+    );
+    notifyListeners();
+  }
+
+  void updatePatient(
+    int index, {
     TriageAnswers? triage,
     List<String>? bodyAreas,
     IssueSeverity? issueSeverity,
     String? description,
-    PaymentMethodType? paymentMethod,
   }) {
-    if (_draft == null) return;
-    _draft = _draft!.copyWith(
-      bookingFor: bookingFor,
-      otherPersonName: otherPersonName,
+    final draft = _draft;
+    if (draft == null || index < 0 || index >= draft.patients.length) return;
+    final patients = [...draft.patients];
+    patients[index] = patients[index].copyWith(
       triage: triage,
       bodyAreas: bodyAreas,
       issueSeverity: issueSeverity,
       description: description,
-      paymentMethod: paymentMethod,
     );
+    _draft = draft.copyWith(patients: patients);
+    notifyListeners();
+  }
+
+  void updateDraft({PaymentMethodType? paymentMethod}) {
+    if (_draft == null) return;
+    _draft = _draft!.copyWith(paymentMethod: paymentMethod);
     notifyListeners();
   }
 
@@ -77,7 +101,7 @@ class PatientBookingViewModel extends ChangeNotifier {
   }
 
   Future<PatientBooking?> confirmBooking({
-    required String patientName,
+    required String accountHolderName,
     required String patientLocation,
     double? patientLat,
     double? patientLng,
@@ -97,11 +121,22 @@ class PatientBookingViewModel extends ChangeNotifier {
         ? '$patientLocation (${patientLat.toStringAsFixed(5)}, ${patientLng.toStringAsFixed(5)})'
         : patientLocation;
 
+    final patients = booking.patients;
+    String nameOf(BookingPatient p) => p.member?.fullName ?? accountHolderName;
+    final single = patients.length == 1;
     final request = AppointmentRequest(
       id: booking.id,
-      patientName: patientName,
+      patientName: patients.map(nameOf).join(', '),
+      patientDetails: single
+          ? patients.first.member?.summary
+          : '${patients.length} patients · one visit',
+      bookedBy: patients.any((p) => p.member != null)
+          ? accountHolderName
+          : null,
       patientLocation: locationLabel,
-      reasonForVisit: _buildReasonForVisit(booking),
+      reasonForVisit: single
+          ? _reasonFor(patients.first)
+          : patients.map((p) => '${nameOf(p)}: ${_reasonFor(p)}').join('\n'),
       estimatedEarnings: booking.amount,
       requestedAt: booking.createdAt,
     );
@@ -112,18 +147,20 @@ class PatientBookingViewModel extends ChangeNotifier {
     return booking;
   }
 
-  String _buildReasonForVisit(PatientBooking booking) {
+  String _reasonFor(BookingPatient patient) {
     final parts = <String>[];
-    if (booking.bodyAreas.isNotEmpty) {
-      parts.add('Areas: ${BodyDiagramWidget.formatAreas(booking.bodyAreas)}');
+    if (patient.bodyAreas.isNotEmpty) {
+      parts.add('Areas: ${BodyDiagramWidget.formatAreas(patient.bodyAreas)}');
     }
-    if (booking.issueSeverity != null) {
-      parts.add('Severity: ${booking.issueSeverity!.label}');
+    if (patient.issueSeverity != null) {
+      parts.add('Severity: ${patient.issueSeverity!.label}');
     }
-    if (booking.description.isNotEmpty) {
-      parts.add(booking.description);
+    if (patient.description.isNotEmpty) {
+      parts.add(patient.description);
     }
-    if (booking.triage.isUrgent) parts.add('URGENT triage flagged');
+    final healthNotes = patient.member?.healthNotes;
+    if (healthNotes != null) parts.add(healthNotes);
+    if (patient.triage.isUrgent) parts.add('URGENT triage flagged');
     return parts.isEmpty ? 'Consultation requested' : parts.join(' – ');
   }
 
@@ -148,10 +185,7 @@ class PatientBookingViewModel extends ChangeNotifier {
             doctorEtaMinutes: 0,
           );
           _statusTimer = Timer(const Duration(seconds: 6), () {
-            _updateBookingStatus(
-              bookingId,
-              PatientBookingStatus.completed,
-            );
+            _updateBookingStatus(bookingId, PatientBookingStatus.completed);
           });
         });
       });
@@ -181,9 +215,7 @@ class PatientBookingViewModel extends ChangeNotifier {
     if (index == -1) return;
 
     final booking = _bookings[index];
-    _bookings[index] = booking.copyWith(
-      status: PatientBookingStatus.completed,
-    );
+    _bookings[index] = booking.copyWith(status: PatientBookingStatus.completed);
 
     _payments.insert(
       0,
@@ -222,9 +254,7 @@ class PatientBookingViewModel extends ChangeNotifier {
 
   /// Seeds a completed booking for demos/tests (e.g. history list).
   void seedCompletedBooking(PatientBooking booking) {
-    final completed = booking.copyWith(
-      status: PatientBookingStatus.completed,
-    );
+    final completed = booking.copyWith(status: PatientBookingStatus.completed);
     _bookings.insert(0, completed);
     notifyListeners();
   }

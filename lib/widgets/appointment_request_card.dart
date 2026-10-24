@@ -59,6 +59,25 @@ class AppointmentRequestCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    if (request.patientDetails != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        request.patientDetails!,
+                        style: AppTypography.bodySecondary.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                    if (request.bookedBy != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Booked by ${request.bookedBy}',
+                        style: AppTypography.bodySecondary.copyWith(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [
