@@ -7,6 +7,7 @@ import 'package:medigo_mobile/utils/patient_navigation.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/login_view_model.dart';
 import 'package:medigo_mobile/widgets/app_header.dart';
+import 'package:medigo_mobile/widgets/social_sign_in_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.role});
@@ -73,6 +74,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (widget.role == UserRole.patient) ...[
+                          SocialSignInButtons(
+                            role: widget.role,
+                            onSuccess: _afterAuthSuccess,
+                            onError: (message) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(message)),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Divider(color: AppColors.border),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(
+                                  'or continue with email',
+                                  style: AppTypography.bodySecondary.copyWith(
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const Expanded(
+                                child: Divider(color: AppColors.border),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                         _buildInputField(
                           controller: _emailController,
                           label: 'Email',
@@ -315,12 +349,18 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (success && mounted) {
-        await navigateAfterAuth(
-          context,
-          authViewModel: context.read<AuthViewModel>(),
-        );
+        await _afterAuthSuccess();
       }
     }
+  }
+
+  Future<void> _afterAuthSuccess() async {
+    // Do not suppress the profile prompt on login — only signup does that.
+    if (!mounted) return;
+    await navigateAfterAuth(
+      context,
+      authViewModel: context.read<AuthViewModel>(),
+    );
   }
 
   String? _validateEmail(String? value) {

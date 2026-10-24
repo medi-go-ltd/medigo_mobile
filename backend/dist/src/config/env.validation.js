@@ -24,6 +24,9 @@ class EnvironmentVariables {
     THROTTLE_LIMIT;
     UPLOAD_BUCKET;
     UPLOAD_BASE_URL;
+    GOOGLE_CLIENT_IDS;
+    APPLE_CLIENT_IDS;
+    ALLOW_INSECURE_SOCIAL_TOKENS;
 }
 exports.EnvironmentVariables = EnvironmentVariables;
 __decorate([
@@ -78,4 +81,19 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], EnvironmentVariables.prototype, "UPLOAD_BASE_URL", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "GOOGLE_CLIENT_IDS", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "APPLE_CLIENT_IDS", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], EnvironmentVariables.prototype, "ALLOW_INSECURE_SOCIAL_TOKENS", void 0);
 //# sourceMappingURL=env.validation.js.map

@@ -79,6 +79,8 @@ class PatientBookingViewModel extends ChangeNotifier {
   Future<PatientBooking?> confirmBooking({
     required String patientName,
     required String patientLocation,
+    double? patientLat,
+    double? patientLng,
   }) async {
     if (_draft == null) return null;
 
@@ -91,10 +93,14 @@ class PatientBookingViewModel extends ChangeNotifier {
     _activeBooking = booking;
     _draft = null;
 
+    final locationLabel = patientLat != null && patientLng != null
+        ? '$patientLocation (${patientLat.toStringAsFixed(5)}, ${patientLng.toStringAsFixed(5)})'
+        : patientLocation;
+
     final request = AppointmentRequest(
       id: booking.id,
       patientName: patientName,
-      patientLocation: patientLocation,
+      patientLocation: locationLabel,
       reasonForVisit: _buildReasonForVisit(booking),
       estimatedEarnings: booking.amount,
       requestedAt: booking.createdAt,
@@ -113,7 +119,8 @@ class PatientBookingViewModel extends ChangeNotifier {
     }
     if (booking.issueSeverity != null) {
       parts.add('Severity: ${booking.issueSeverity!.label}');
-    } else if (booking.description.isNotEmpty) {
+    }
+    if (booking.description.isNotEmpty) {
       parts.add(booking.description);
     }
     if (booking.triage.isUrgent) parts.add('URGENT triage flagged');

@@ -7,6 +7,7 @@ import 'package:medigo_mobile/features/auth/login_screen.dart';
 import 'package:medigo_mobile/features/auth/patient_signup_screen.dart';
 import 'package:medigo_mobile/features/auth/reset_password_screen.dart';
 import 'package:medigo_mobile/features/auth/verification_pending_screen.dart';
+import 'package:medigo_mobile/features/auth/verify_email_screen.dart';
 import 'package:medigo_mobile/features/home/home_screen.dart';
 import 'package:medigo_mobile/features/patient/booking/patient_booking_flow_screen.dart';
 import 'package:medigo_mobile/features/patient/visit/patient_active_visit_screen.dart';
@@ -29,6 +30,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String forgotPasswordSent = '/forgot-password-sent';
   static const String resetPassword = '/reset-password';
+  static const String verifyEmail = '/verify-email';
   static const String signup = '/signup';
   static const String doctorSignup = '/doctor-signup';
   static const String verificationPending = '/verification-pending';
@@ -86,6 +88,15 @@ class AppRoutes {
             email: args.email,
             initialToken: args.token,
           ),
+          settings: settings,
+        );
+      case verifyEmail:
+        final args = settings.arguments as VerifyEmailArguments?;
+        if (args == null) {
+          return _errorRoute(settings, 'Email required for verification');
+        }
+        return MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(email: args.email),
           settings: settings,
         );
       case signup:
@@ -186,11 +197,16 @@ class AppRoutes {
   static Widget _buildHomeRoute(BuildContext context) {
     final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
     final user = authViewModel.user;
-    if (user != null && !user.isVerified) {
-      if (user.role == UserRole.doctor) {
-        return const VerificationPendingScreen();
-      }
-      return const PatientVerificationPendingScreen();
+    if (user != null &&
+        user.role == UserRole.patient &&
+        !user.emailVerified) {
+      return VerifyEmailScreen(email: user.email);
+    }
+    // Doctors are blocked until admin verification.
+    if (user != null &&
+        user.role == UserRole.doctor &&
+        !user.isVerified) {
+      return const VerificationPendingScreen();
     }
     return const HomeScreen();
   }
@@ -231,6 +247,12 @@ class ResetPasswordArguments {
   final String? token;
 
   const ResetPasswordArguments({required this.email, this.token});
+}
+
+class VerifyEmailArguments {
+  final String email;
+
+  const VerifyEmailArguments({required this.email});
 }
 
 class SignupArguments {

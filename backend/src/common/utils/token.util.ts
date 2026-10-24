@@ -16,6 +16,16 @@ export function hashPasswordResetToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+/** Six-digit numeric code for in-app email verification. */
+export function generateEmailVerificationCode(): string {
+  const n = randomBytes(3).readUIntBE(0, 3) % 1_000_000;
+  return n.toString().padStart(6, '0');
+}
+
+export function hashEmailVerificationCode(code: string): string {
+  return createHash('sha256').update(code.trim()).digest('hex');
+}
+
 export function parseDurationToMs(duration: string): number {
   const match = /^(\d+)([smhd])$/i.exec(duration.trim());
   if (!match) {

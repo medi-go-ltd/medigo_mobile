@@ -102,20 +102,39 @@ class PatientHomeViewModel extends ChangeNotifier {
   }
 
   Future<void> _initializeLocationAndLoadDoctors() async {
-    Location? currentLocation = _defaultUserLocation.address != null
-        ? await LocationService.getLocationFromAddress(
-            _defaultUserLocation.address!,
-          )
-        : null;
-
-    currentLocation ??= await LocationService.getCurrentLocation();
-
-    _userLocation = currentLocation ?? _defaultUserLocation;
+    // Show the map immediately with a default centre so GPS never blocks the UI.
+    _userLocation = _defaultUserLocation;
     notifyListeners();
 
     await _loadDoctors();
     _updateMarkers();
+
+    // Refine with device GPS when available (timed out in LocationService).
+    final currentLocation = await LocationService.getCurrentLocation();
+    if (currentLocation != null) {
+      _userLocation = currentLocation;
+      _updateDistancesAndSort();
+      _updateMarkers();
+      notifyListeners();
+      await _animateCameraToUser();
+    }
+
     _startLocationTracking();
+  }
+
+  Future<void> _animateCameraToUser() async {
+    final location = _userLocation;
+    final controller = _mapController;
+    if (location == null || controller == null) return;
+    try {
+      await controller.animateCamera(
+        CameraUpdate.newLatLng(
+          LatLng(location.latitude, location.longitude),
+        ),
+      );
+    } catch (_) {
+      // Map may not be ready yet; markers/camera still update on next frame.
+    }
   }
 
   void _startLocationTracking() {
@@ -143,18 +162,7 @@ class PatientHomeViewModel extends ChangeNotifier {
     final doctorsWithUpdatedTime = sortedDoctors.map((doctor) {
       final distance = LocationUtils.distanceToDoctor(_userLocation!, doctor);
       final estimatedTime = LocationUtils.estimateTravelTime(distance);
-      return Doctor(
-        id: doctor.id,
-        firstName: doctor.firstName,
-        lastName: doctor.lastName,
-        specialty: doctor.specialty,
-        fee: doctor.fee,
-        profileImageUrl: doctor.profileImageUrl,
-        rating: doctor.rating,
-        reviewCount: doctor.reviewCount,
-        location: doctor.location,
-        estimatedTime: estimatedTime,
-      );
+      return doctor.copyWith(estimatedTime: estimatedTime);
     }).toList();
 
     _sortedDoctors = doctorsWithUpdatedTime;
@@ -183,18 +191,7 @@ class PatientHomeViewModel extends ChangeNotifier {
             doctor,
           );
           final estimatedTime = LocationUtils.estimateTravelTime(distance);
-          return Doctor(
-            id: doctor.id,
-            firstName: doctor.firstName,
-            lastName: doctor.lastName,
-            specialty: doctor.specialty,
-            fee: doctor.fee,
-            profileImageUrl: doctor.profileImageUrl,
-            rating: doctor.rating,
-            reviewCount: doctor.reviewCount,
-            location: doctor.location,
-            estimatedTime: estimatedTime,
-          );
+          return doctor.copyWith(estimatedTime: estimatedTime);
         }
         return doctor;
       }).toList();

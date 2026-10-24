@@ -7,4 +7,7 @@ class ApiConfig {
   static const String login = '/login';
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
+  static const String verifyEmail = '/auth/verify-email';
+  static const String resendEmailVerification =
+      '/auth/resend-email-verification';
 }

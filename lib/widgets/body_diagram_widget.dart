@@ -4,6 +4,9 @@ import 'package:medigo_mobile/theme/app_theme.dart';
 
 enum BodyViewSide { front, back }
 
+/// Diagram display mode: overview (both) or a focused single side.
+enum BodyDiagramViewMode { both, front, back }
+
 const _bodyMapIconColor = Color(0xFF0B7F8E);
 
 class BodyDiagramWidget extends StatefulWidget {
@@ -52,7 +55,10 @@ class BodyDiagramWidget extends StatefulWidget {
     'Right Foot',
   ];
 
-  static const areas = [...primaryAreas, ...extraAreas];
+  /// For symptoms that don't sit in one place (fever, nausea, dizziness…).
+  static const generalArea = 'Whole body / general';
+
+  static const areas = [...primaryAreas, ...extraAreas, generalArea];
 
   static int _areaSortOrder(String a, String b) {
     final ai = areas.indexOf(a);
@@ -70,7 +76,7 @@ class BodyDiagramWidget extends StatefulWidget {
 }
 
 class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
-  BodyViewSide _activeView = BodyViewSide.front;
+  BodyDiagramViewMode _viewMode = BodyDiagramViewMode.both;
 
   void _toggleArea(String area) {
     HapticFeedback.selectionClick();
@@ -123,6 +129,13 @@ class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
               onTap: () => _toggleArea(area),
             );
           },
+        ),
+        const SizedBox(height: 6),
+        _GeneralAreaTile(
+          selected: widget.selectedAreas.contains(
+            BodyDiagramWidget.generalArea,
+          ),
+          onTap: () => _toggleArea(BodyDiagramWidget.generalArea),
         ),
         if (widget.selectedAreas.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -178,7 +191,7 @@ class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
                       final area = BodyDiagramWidget.extraAreas[index];
                       return _ExtraAreaTile(
                         label: area,
-                        icon: _extraIconForArea(area),
+                        assetPath: _assetForArea(area),
                         selected: widget.selectedAreas.contains(area),
                         onTap: () {
                           _toggleArea(area);
@@ -210,15 +223,15 @@ class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
               ),
               const SizedBox(height: 2),
               Text(
-                'Tap on the body or choose an area below',
+                'Tap where you feel it, even if it feels internal',
                 style: AppTypography.bodySecondary.copyWith(fontSize: 14),
               ),
             ],
           ),
         ),
         _ViewToggle(
-          activeView: _activeView,
-          onChanged: (view) => setState(() => _activeView = view),
+          viewMode: _viewMode,
+          onChanged: (mode) => setState(() => _viewMode = mode),
         ),
       ],
     );
@@ -240,80 +253,66 @@ class _BodyDiagramWidgetState extends State<BodyDiagramWidget> {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final showBoth = constraints.maxWidth >= 360;
-          if (!showBoth) {
-            return _BodyImagePanel(
-              side: _activeView,
-              gender: widget.gender,
-              selectedAreas: widget.selectedAreas,
-              onAreaToggled: _toggleArea,
-            );
-          }
-
-          return Row(
-            children: [
-              Expanded(
-                flex: 38,
-                child: _BodyImagePanel(
-                  side: BodyViewSide.front,
-                  gender: widget.gender,
-                  selectedAreas: widget.selectedAreas,
-                  onAreaToggled: _toggleArea,
-                ),
-              ),
-              SizedBox(
-                width: 92,
-                child: _TapInstruction(),
-              ),
-              Expanded(
-                flex: 38,
-                child: _BodyImagePanel(
-                  side: BodyViewSide.back,
-                  gender: widget.gender,
-                  selectedAreas: widget.selectedAreas,
-                  onAreaToggled: _toggleArea,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+      child: switch (_viewMode) {
+        BodyDiagramViewMode.both => _buildBothViews(),
+        BodyDiagramViewMode.front => _buildFocusedView(BodyViewSide.front),
+        BodyDiagramViewMode.back => _buildFocusedView(BodyViewSide.back),
+      },
     );
   }
-}
 
-class _TapInstruction extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildBothViews() {
+    return Stack(
       children: [
-        Image.asset(
-          'assets/images/body_map/tap_body_area.png',
-          width: 52,
-          height: 52,
-          fit: BoxFit.contain,
+        Row(
+          children: [
+            Expanded(
+              child: _BodyImagePanel(
+                side: BodyViewSide.front,
+                gender: widget.gender,
+                selectedAreas: widget.selectedAreas,
+                onAreaToggled: _toggleArea,
+              ),
+            ),
+            Expanded(
+              child: _BodyImagePanel(
+                side: BodyViewSide.back,
+                gender: widget.gender,
+                selectedAreas: widget.selectedAreas,
+                onAreaToggled: _toggleArea,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Tap on a body\narea to select',
-          textAlign: TextAlign.center,
-          style: AppTypography.body.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            height: 1.18,
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 10,
+          child: IgnorePointer(
+            child: _TapInstructionCompact(),
           ),
         ),
-        const SizedBox(height: 14),
-        Text(
-          'You can select\nmultiple areas',
-          textAlign: TextAlign.center,
-          style: AppTypography.body.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            height: 1.18,
+      ],
+    );
+  }
+
+  Widget _buildFocusedView(BodyViewSide side) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: _BodyImagePanel(
+            side: side,
+            gender: widget.gender,
+            selectedAreas: widget.selectedAreas,
+            onAreaToggled: _toggleArea,
+          ),
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          bottom: 10,
+          child: IgnorePointer(
+            child: _TapInstructionCompact(),
           ),
         ),
       ],
@@ -321,7 +320,23 @@ class _TapInstruction extends StatelessWidget {
   }
 }
 
-class _BodyImagePanel extends StatelessWidget {
+class _TapInstructionCompact extends StatelessWidget {
+  const _TapInstructionCompact();
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Tap a body area · select multiple',
+      textAlign: TextAlign.center,
+      style: AppTypography.bodySecondary.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+}
+
+class _BodyImagePanel extends StatefulWidget {
   const _BodyImagePanel({
     required this.side,
     required this.gender,
@@ -335,59 +350,202 @@ class _BodyImagePanel extends StatelessWidget {
   final ValueChanged<String> onAreaToggled;
 
   @override
+  State<_BodyImagePanel> createState() => _BodyImagePanelState();
+}
+
+class _BodyImagePanelState extends State<_BodyImagePanel> {
+  static const double _minScale = 1.0;
+  static const double _maxScale = 3.5;
+  static const double _zoomStep = 0.35;
+
+  final TransformationController _transform = TransformationController();
+  double _scale = 1.0;
+
+  @override
+  void dispose() {
+    _transform.dispose();
+    super.dispose();
+  }
+
+  void _setScale(double next, {required Size viewport}) {
+    final clamped = next.clamp(_minScale, _maxScale);
+    if (clamped <= _minScale + 0.001) {
+      _transform.value = Matrix4.identity();
+      setState(() => _scale = _minScale);
+      return;
+    }
+
+    // Scale around the viewport centre and keep the current pan when possible.
+    final current = _transform.value.clone();
+    final currentScale =
+        current.getMaxScaleOnAxis().clamp(_minScale, _maxScale);
+    final focalX = viewport.width / 2;
+    final focalY = viewport.height / 2;
+    final nextMatrix = Matrix4.identity()
+      ..translateByDouble(focalX, focalY, 0, 1)
+      ..scaleByDouble(clamped / currentScale, clamped / currentScale, 1, 1)
+      ..translateByDouble(-focalX, -focalY, 0, 1)
+      ..multiply(current);
+    _transform.value = nextMatrix;
+    setState(() => _scale = clamped);
+  }
+
+  void _zoomIn(Size viewport) =>
+      _setScale(_scale + _zoomStep, viewport: viewport);
+
+  void _zoomOut(Size viewport) =>
+      _setScale(_scale - _zoomStep, viewport: viewport);
+
+  void _resetZoom() {
+    _transform.value = Matrix4.identity();
+    setState(() => _scale = _minScale);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final zones = _zonesForSide(side, gender: gender);
-    final aspectRatio = _bodyAspectRatio(side: side, gender: gender);
+    final zones = _zonesForSide(widget.side, gender: widget.gender);
+    final aspectRatio =
+        _bodyAspectRatio(side: widget.side, gender: widget.gender);
+    // Keep zoom on the outer edge so it sits in empty space, not on the legs.
+    final controlsOnLeft = widget.side == BodyViewSide.front;
     return LayoutBuilder(
       builder: (context, constraints) {
         final container = Size(constraints.maxWidth, constraints.maxHeight);
         final figureSize = _fittedFigureSize(container, aspectRatio);
         return Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
+          clipBehavior: Clip.hardEdge,
           children: [
-            SizedBox(
-              width: figureSize.width,
-              height: figureSize.height,
-              child: GestureDetector(
-                key: ValueKey('body-map-${side.name}-panel'),
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (details) {
-                  final normalized = Offset(
-                    details.localPosition.dx / figureSize.width,
-                    details.localPosition.dy / figureSize.height,
-                  );
-                  final area = _areaAtNormalized(
-                    normalized,
-                    zones,
-                    _hitOrderForSide(side),
-                  );
-                  if (area != null) onAreaToggled(area);
+            Positioned.fill(
+              child: InteractiveViewer(
+                key: ValueKey('body-map-${widget.side.name}-viewer'),
+                transformationController: _transform,
+                minScale: _minScale,
+                maxScale: _maxScale,
+                panEnabled: _scale > 1.01,
+                scaleEnabled: true,
+                boundaryMargin: const EdgeInsets.all(48),
+                clipBehavior: Clip.hardEdge,
+                onInteractionEnd: (_) {
+                  final scale = _transform.value.getMaxScaleOnAxis();
+                  if ((scale - _scale).abs() > 0.01) {
+                    setState(() => _scale = scale);
+                  }
                 },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: Image.asset(
-                        _bodyImageAsset(side: side, gender: gender),
-                        fit: BoxFit.fill,
+                child: Center(
+                  child: SizedBox(
+                    width: figureSize.width,
+                    height: figureSize.height,
+                    child: GestureDetector(
+                      key: ValueKey('body-map-${widget.side.name}-panel'),
+                      behavior: HitTestBehavior.opaque,
+                      onTapDown: (details) {
+                        final normalized = Offset(
+                          details.localPosition.dx / figureSize.width,
+                          details.localPosition.dy / figureSize.height,
+                        );
+                        final area = _areaAtNormalized(
+                          normalized,
+                          zones,
+                          _hitOrderForSide(widget.side),
+                        );
+                        if (area != null) widget.onAreaToggled(area);
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Positioned.fill(
+                            child: Image.asset(
+                              _bodyImageAsset(
+                                side: widget.side,
+                                gender: widget.gender,
+                              ),
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          ...zones
+                              .where(
+                                (zone) =>
+                                    widget.selectedAreas.contains(zone.area),
+                              )
+                              .map(
+                                (zone) => _SelectionGlow(
+                                  zone: zone,
+                                  figureSize: figureSize,
+                                ),
+                              ),
+                        ],
                       ),
                     ),
-                    ...zones
-                        .where((zone) => selectedAreas.contains(zone.area))
-                        .map(
-                          (zone) => _SelectionGlow(
-                            zone: zone,
-                            figureSize: figureSize,
-                          ),
-                        ),
-                  ],
+                  ),
                 ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              left: controlsOnLeft ? 4 : null,
+              right: controlsOnLeft ? null : 4,
+              child: _ZoomControls(
+                onZoomIn: () => _zoomIn(container),
+                onZoomOut: () => _zoomOut(container),
+                onReset: _resetZoom,
+                canZoomIn: _scale < _maxScale - 0.01,
+                canZoomOut: _scale > _minScale + 0.01,
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _ZoomControls extends StatelessWidget {
+  const _ZoomControls({
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onReset,
+    required this.canZoomIn,
+    required this.canZoomOut,
+  });
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onReset;
+  final bool canZoomIn;
+  final bool canZoomOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface.withValues(alpha: 0.94),
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            key: const ValueKey('body-zoom-in'),
+            tooltip: 'Zoom in',
+            onPressed: canZoomIn ? onZoomIn : null,
+            icon: const Icon(Icons.add, size: 20),
+            visualDensity: VisualDensity.compact,
+          ),
+          IconButton(
+            key: const ValueKey('body-zoom-out'),
+            tooltip: 'Zoom out',
+            onPressed: canZoomOut ? onZoomOut : null,
+            icon: const Icon(Icons.remove, size: 20),
+            visualDensity: VisualDensity.compact,
+          ),
+          IconButton(
+            key: const ValueKey('body-zoom-reset'),
+            tooltip: 'Reset zoom',
+            onPressed: canZoomOut ? onReset : null,
+            icon: const Icon(Icons.fit_screen_outlined, size: 18),
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -464,10 +622,11 @@ String _bodyImageAsset({required BodyViewSide side, String? gender}) {
 
 double _bodyAspectRatio({required BodyViewSide side, String? gender}) {
   final isFemale = gender?.trim().toLowerCase() == 'female';
+  // Match assets/images/body_map/body_{front|back}_{male|female}.png
   if (isFemale) {
-    return side == BodyViewSide.front ? 265 / 545 : 250 / 545;
+    return side == BodyViewSide.front ? 874 / 1800 : 849 / 1852;
   }
-  return side == BodyViewSide.front ? 285 / 555 : 275 / 555;
+  return 1024 / 1536;
 }
 
 Size _fittedFigureSize(Size container, double aspectRatio) {
@@ -638,120 +797,121 @@ const _backHitOrder = [
   'Upper Back',
 ];
 
-/// Tap/glow zones tuned to [body_front_male.png] / [body_back_male.png].
+/// Tap/glow zones tuned to the 3D [body_front_male.png] / [body_back_male.png].
+/// Front: patient's left = image right. Back: patient's left = image left.
 final _maleFrontZones = [
-  _bodyHeadZone('Head', 0.540, 0.082),
-  _bodyZone('Throat', 0.540, 0.182, 0.035),
-  _bodyZone('Neck', 0.540, 0.151, 0.040),
-  _bodyZone('Left Shoulder', 0.725, 0.211, 0.065),
-  _bodyZone('Right Shoulder', 0.335, 0.211, 0.065),
-  _bodyZone('Chest', 0.540, 0.297, 0.085),
-  _bodyZone('Abdomen', 0.537, 0.395, 0.078),
-  _bodyZone('Pelvis', 0.535, 0.502, 0.076),
-  _bodyZone('Left Arm', 0.814, 0.432, 0.055),
-  _bodyZone('Right Arm', 0.263, 0.432, 0.055),
-  _bodyZone('Left Elbow', 0.839, 0.481, 0.042),
-  _bodyZone('Right Elbow', 0.235, 0.481, 0.042),
-  _bodyZone('Left Wrist', 0.889, 0.559, 0.035),
-  _bodyZone('Right Wrist', 0.181, 0.559, 0.035),
-  _bodyZone('Left Hand', 0.665, 0.647, 0.045),
-  _bodyZone('Right Hand', 0.409, 0.647, 0.045),
-  _bodyZone('Left Hip', 0.620, 0.550, 0.052),
-  _bodyZone('Right Hip', 0.455, 0.550, 0.052),
-  _bodyLegZone('Left Leg', 0.640, 0.748, 0.050, 0.100),
-  _bodyLegZone('Right Leg', 0.419, 0.748, 0.050, 0.100),
-  _bodyZone('Left Knee', 0.640, 0.705, 0.048),
-  _bodyZone('Right Knee', 0.419, 0.705, 0.048),
-  _bodyAnkleZone('Left Ankle', 0.654, 0.879),
-  _bodyAnkleZone('Right Ankle', 0.418, 0.879),
-  _bodyFootZone('Left Foot', 0.651, 0.955, 0.055, 0.020),
-  _bodyFootZone('Right Foot', 0.421, 0.955, 0.055, 0.020),
+  _bodyHeadZone('Head', 0.500, 0.085),
+  _bodyZone('Throat', 0.500, 0.148, 0.038),
+  _bodyZone('Neck', 0.500, 0.168, 0.042),
+  _bodyZone('Left Shoulder', 0.675, 0.222, 0.062),
+  _bodyZone('Right Shoulder', 0.322, 0.222, 0.062),
+  _bodyZone('Chest', 0.500, 0.296, 0.090),
+  _bodyZone('Abdomen', 0.500, 0.390, 0.080),
+  _bodyZone('Pelvis', 0.500, 0.500, 0.078),
+  _bodyZone('Left Arm', 0.722, 0.388, 0.050),
+  _bodyZone('Right Arm', 0.276, 0.388, 0.050),
+  _bodyZone('Left Elbow', 0.778, 0.462, 0.040),
+  _bodyZone('Right Elbow', 0.221, 0.462, 0.040),
+  _bodyZone('Left Wrist', 0.793, 0.526, 0.034),
+  _bodyZone('Right Wrist', 0.196, 0.526, 0.034),
+  _bodyZone('Left Hand', 0.793, 0.548, 0.042),
+  _bodyZone('Right Hand', 0.206, 0.548, 0.042),
+  _bodyZone('Left Hip', 0.580, 0.517, 0.050),
+  _bodyZone('Right Hip', 0.419, 0.517, 0.050),
+  _bodyLegZone('Left Leg', 0.588, 0.700, 0.048, 0.095),
+  _bodyLegZone('Right Leg', 0.412, 0.700, 0.048, 0.095),
+  _bodyZone('Left Knee', 0.607, 0.683, 0.046),
+  _bodyZone('Right Knee', 0.393, 0.683, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.621, 0.849),
+  _bodyAnkleZone('Right Ankle', 0.379, 0.849),
+  _bodyFootZone('Left Foot', 0.630, 0.904, 0.055, 0.022),
+  _bodyFootZone('Right Foot', 0.369, 0.904, 0.055, 0.022),
 ];
 
 final _maleBackZones = [
-  _bodyHeadZone('Head', 0.459, 0.082),
-  _bodyZone('Neck', 0.458, 0.151, 0.040),
-  _bodyZone('Left Shoulder', 0.248, 0.211, 0.065),
-  _bodyZone('Right Shoulder', 0.665, 0.211, 0.065),
-  _bodyZone('Upper Back', 0.460, 0.297, 0.088),
-  _bodyZone('Lower Back', 0.459, 0.452, 0.072),
-  _bodyZone('Pelvis', 0.459, 0.508, 0.080),
-  _bodyZone('Left Arm', 0.165, 0.432, 0.055),
-  _bodyZone('Right Arm', 0.753, 0.432, 0.055),
-  _bodyZone('Left Elbow', 0.778, 0.481, 0.042),
-  _bodyZone('Right Elbow', 0.142, 0.481, 0.042),
-  _bodyZone('Left Wrist', 0.831, 0.559, 0.035),
-  _bodyZone('Right Wrist', 0.089, 0.559, 0.035),
-  _bodyZone('Left Hand', 0.320, 0.645, 0.045),
-  _bodyZone('Right Hand', 0.589, 0.645, 0.045),
-  _bodyZone('Left Hip', 0.380, 0.548, 0.052),
-  _bodyZone('Right Hip', 0.545, 0.548, 0.052),
-  _bodyLegZone('Left Leg', 0.333, 0.748, 0.050, 0.098),
-  _bodyLegZone('Right Leg', 0.567, 0.748, 0.050, 0.098),
-  _bodyZone('Left Knee', 0.342, 0.723, 0.048),
-  _bodyZone('Right Knee', 0.565, 0.723, 0.048),
-  _bodyAnkleZone('Left Ankle', 0.325, 0.877),
-  _bodyAnkleZone('Right Ankle', 0.578, 0.877),
-  _bodyFootZone('Left Foot', 0.252, 0.958, 0.072, 0.018),
-  _bodyFootZone('Right Foot', 0.580, 0.958, 0.072, 0.018),
+  _bodyHeadZone('Head', 0.500, 0.080),
+  _bodyZone('Neck', 0.500, 0.162, 0.042),
+  _bodyZone('Left Shoulder', 0.315, 0.217, 0.062),
+  _bodyZone('Right Shoulder', 0.684, 0.217, 0.062),
+  _bodyZone('Upper Back', 0.500, 0.292, 0.090),
+  _bodyZone('Lower Back', 0.500, 0.420, 0.072),
+  _bodyZone('Pelvis', 0.500, 0.500, 0.080),
+  _bodyZone('Left Arm', 0.267, 0.384, 0.050),
+  _bodyZone('Right Arm', 0.732, 0.384, 0.050),
+  _bodyZone('Left Elbow', 0.207, 0.458, 0.040),
+  _bodyZone('Right Elbow', 0.792, 0.458, 0.040),
+  _bodyZone('Left Wrist', 0.190, 0.523, 0.034),
+  _bodyZone('Right Wrist', 0.817, 0.523, 0.034),
+  _bodyZone('Left Hand', 0.191, 0.545, 0.042),
+  _bodyZone('Right Hand', 0.808, 0.545, 0.042),
+  _bodyZone('Left Hip', 0.421, 0.514, 0.050),
+  _bodyZone('Right Hip', 0.578, 0.514, 0.050),
+  _bodyLegZone('Left Leg', 0.411, 0.700, 0.048, 0.095),
+  _bodyLegZone('Right Leg', 0.588, 0.700, 0.048, 0.095),
+  _bodyZone('Left Knee', 0.395, 0.680, 0.046),
+  _bodyZone('Right Knee', 0.604, 0.680, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.375, 0.847),
+  _bodyAnkleZone('Right Ankle', 0.625, 0.847),
+  _bodyFootZone('Left Foot', 0.367, 0.903, 0.055, 0.022),
+  _bodyFootZone('Right Foot', 0.632, 0.903, 0.055, 0.022),
 ];
 
-/// Tap/glow zones tuned to [body_front_female.png] / [body_back_female.png].
+/// Tap/glow zones tuned to the 3D [body_front_female.png] / [body_back_female.png].
 final _femaleFrontZones = [
-  _bodyHeadZone('Head', 0.500, 0.090),
-  _bodyZone('Throat', 0.500, 0.186, 0.035),
-  _bodyZone('Neck', 0.500, 0.156, 0.040),
-  _bodyZone('Left Shoulder', 0.698, 0.216, 0.062),
-  _bodyZone('Right Shoulder', 0.358, 0.216, 0.062),
-  _bodyZone('Chest', 0.500, 0.302, 0.082),
-  _bodyZone('Abdomen', 0.500, 0.400, 0.075),
-  _bodyZone('Pelvis', 0.500, 0.508, 0.074),
-  _bodyZone('Left Arm', 0.788, 0.438, 0.052),
-  _bodyZone('Right Arm', 0.288, 0.438, 0.052),
-  _bodyZone('Left Elbow', 0.808, 0.488, 0.040),
-  _bodyZone('Right Elbow', 0.268, 0.488, 0.040),
-  _bodyZone('Left Wrist', 0.858, 0.565, 0.034),
-  _bodyZone('Right Wrist', 0.218, 0.565, 0.034),
-  _bodyZone('Left Hand', 0.638, 0.652, 0.043),
-  _bodyZone('Right Hand', 0.428, 0.652, 0.043),
-  _bodyZone('Left Hip', 0.598, 0.556, 0.050),
-  _bodyZone('Right Hip', 0.478, 0.556, 0.050),
-  _bodyLegZone('Left Leg', 0.618, 0.752, 0.048, 0.098),
-  _bodyLegZone('Right Leg', 0.418, 0.752, 0.048, 0.098),
-  _bodyZone('Left Knee', 0.618, 0.710, 0.046),
-  _bodyZone('Right Knee', 0.418, 0.710, 0.046),
-  _bodyAnkleZone('Left Ankle', 0.632, 0.882),
-  _bodyAnkleZone('Right Ankle', 0.422, 0.882),
-  _bodyFootZone('Left Foot', 0.628, 0.958, 0.052, 0.020),
-  _bodyFootZone('Right Foot', 0.425, 0.958, 0.052, 0.020),
+  _bodyHeadZone('Head', 0.497, 0.084),
+  _bodyZone('Throat', 0.496, 0.152, 0.036),
+  _bodyZone('Neck', 0.495, 0.172, 0.040),
+  _bodyZone('Left Shoulder', 0.690, 0.231, 0.060),
+  _bodyZone('Right Shoulder', 0.300, 0.231, 0.060),
+  _bodyZone('Chest', 0.494, 0.309, 0.088),
+  _bodyZone('Abdomen', 0.495, 0.407, 0.078),
+  _bodyZone('Pelvis', 0.493, 0.520, 0.076),
+  _bodyZone('Left Arm', 0.739, 0.407, 0.050),
+  _bodyZone('Right Arm', 0.249, 0.407, 0.050),
+  _bodyZone('Left Elbow', 0.787, 0.485, 0.040),
+  _bodyZone('Right Elbow', 0.201, 0.485, 0.040),
+  _bodyZone('Left Wrist', 0.836, 0.554, 0.034),
+  _bodyZone('Right Wrist', 0.149, 0.554, 0.034),
+  _bodyZone('Left Hand', 0.839, 0.583, 0.042),
+  _bodyZone('Right Hand', 0.147, 0.583, 0.042),
+  _bodyZone('Left Hip', 0.605, 0.544, 0.050),
+  _bodyZone('Right Hip', 0.381, 0.544, 0.050),
+  _bodyLegZone('Left Leg', 0.603, 0.720, 0.050, 0.095),
+  _bodyLegZone('Right Leg', 0.386, 0.720, 0.050, 0.095),
+  _bodyZone('Left Knee', 0.593, 0.720, 0.046),
+  _bodyZone('Right Knee', 0.396, 0.720, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.593, 0.896),
+  _bodyAnkleZone('Right Ankle', 0.396, 0.896),
+  _bodyFootZone('Left Foot', 0.589, 0.955, 0.050, 0.022),
+  _bodyFootZone('Right Foot', 0.402, 0.955, 0.050, 0.022),
 ];
 
 final _femaleBackZones = [
-  _bodyHeadZone('Head', 0.502, 0.088),
-  _bodyZone('Neck', 0.502, 0.156, 0.038),
-  _bodyZone('Left Shoulder', 0.268, 0.216, 0.062),
-  _bodyZone('Right Shoulder', 0.638, 0.216, 0.062),
-  _bodyZone('Upper Back', 0.502, 0.302, 0.085),
-  _bodyZone('Lower Back', 0.502, 0.456, 0.070),
-  _bodyZone('Pelvis', 0.502, 0.514, 0.078),
-  _bodyZone('Left Arm', 0.188, 0.438, 0.052),
-  _bodyZone('Right Arm', 0.728, 0.438, 0.052),
-  _bodyZone('Left Elbow', 0.758, 0.488, 0.040),
-  _bodyZone('Right Elbow', 0.162, 0.488, 0.040),
-  _bodyZone('Left Wrist', 0.818, 0.565, 0.034),
-  _bodyZone('Right Wrist', 0.102, 0.565, 0.034),
-  _bodyZone('Left Hand', 0.338, 0.650, 0.043),
-  _bodyZone('Right Hand', 0.578, 0.650, 0.043),
-  _bodyZone('Left Hip', 0.398, 0.554, 0.050),
-  _bodyZone('Right Hip', 0.558, 0.554, 0.050),
-  _bodyLegZone('Left Leg', 0.348, 0.752, 0.048, 0.096),
-  _bodyLegZone('Right Leg', 0.558, 0.752, 0.048, 0.096),
-  _bodyZone('Left Knee', 0.356, 0.726, 0.046),
-  _bodyZone('Right Knee', 0.556, 0.726, 0.046),
-  _bodyAnkleZone('Left Ankle', 0.338, 0.880),
-  _bodyAnkleZone('Right Ankle', 0.568, 0.880),
-  _bodyFootZone('Left Foot', 0.268, 0.958, 0.068, 0.018),
-  _bodyFootZone('Right Foot', 0.572, 0.958, 0.068, 0.018),
+  _bodyHeadZone('Head', 0.494, 0.083),
+  _bodyZone('Neck', 0.494, 0.170, 0.040),
+  _bodyZone('Left Shoulder', 0.290, 0.228, 0.060),
+  _bodyZone('Right Shoulder', 0.700, 0.228, 0.060),
+  _bodyZone('Upper Back', 0.495, 0.305, 0.088),
+  _bodyZone('Lower Back', 0.495, 0.430, 0.072),
+  _bodyZone('Pelvis', 0.494, 0.520, 0.078),
+  _bodyZone('Left Arm', 0.235, 0.402, 0.050),
+  _bodyZone('Right Arm', 0.754, 0.402, 0.050),
+  _bodyZone('Left Elbow', 0.184, 0.479, 0.040),
+  _bodyZone('Right Elbow', 0.806, 0.479, 0.040),
+  _bodyZone('Left Wrist', 0.134, 0.548, 0.034),
+  _bodyZone('Right Wrist', 0.859, 0.548, 0.034),
+  _bodyZone('Left Hand', 0.133, 0.576, 0.042),
+  _bodyZone('Right Hand', 0.861, 0.576, 0.042),
+  _bodyZone('Left Hip', 0.373, 0.538, 0.050),
+  _bodyZone('Right Hip', 0.615, 0.538, 0.050),
+  _bodyLegZone('Left Leg', 0.378, 0.710, 0.050, 0.095),
+  _bodyLegZone('Right Leg', 0.609, 0.710, 0.050, 0.095),
+  _bodyZone('Left Knee', 0.389, 0.712, 0.046),
+  _bodyZone('Right Knee', 0.600, 0.712, 0.046),
+  _bodyAnkleZone('Left Ankle', 0.382, 0.886),
+  _bodyAnkleZone('Right Ankle', 0.605, 0.886),
+  _bodyFootZone('Left Foot', 0.388, 0.944, 0.050, 0.022),
+  _bodyFootZone('Right Foot', 0.598, 0.944, 0.050, 0.022),
 ];
 
 String _assetForArea(String area) {
@@ -784,21 +944,49 @@ String _assetForArea(String area) {
       return 'assets/images/body_map/left_leg.png';
     case 'Right Leg':
       return 'assets/images/body_map/right_leg.png';
+    case 'Left Elbow':
+      return 'assets/images/body_map/left_elbow.png';
+    case 'Right Elbow':
+      return 'assets/images/body_map/right_elbow.png';
+    case 'Left Wrist':
+      return 'assets/images/body_map/left_wrist.png';
+    case 'Right Wrist':
+      return 'assets/images/body_map/right_wrist.png';
+    case 'Left Hand':
+      return 'assets/images/body_map/left_hand.png';
+    case 'Right Hand':
+      return 'assets/images/body_map/right_hand.png';
+    case 'Left Hip':
+      return 'assets/images/body_map/left_hip.png';
+    case 'Right Hip':
+      return 'assets/images/body_map/right_hip.png';
+    case 'Left Knee':
+      return 'assets/images/body_map/left_knee.png';
+    case 'Right Knee':
+      return 'assets/images/body_map/right_knee.png';
+    case 'Left Ankle':
+      return 'assets/images/body_map/left_ankle.png';
+    case 'Right Ankle':
+      return 'assets/images/body_map/right_ankle.png';
+    case 'Left Foot':
+      return 'assets/images/body_map/left_foot.png';
+    case 'Right Foot':
+      return 'assets/images/body_map/right_foot.png';
     default:
       return 'assets/images/body_map/more.png';
   }
 }
 
 class _ViewToggle extends StatelessWidget {
-  const _ViewToggle({required this.activeView, required this.onChanged});
+  const _ViewToggle({required this.viewMode, required this.onChanged});
 
-  final BodyViewSide activeView;
-  final ValueChanged<BodyViewSide> onChanged;
+  final BodyDiagramViewMode viewMode;
+  final ValueChanged<BodyDiagramViewMode> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 176,
+      width: 210,
       height: 38,
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
@@ -808,18 +996,19 @@ class _ViewToggle extends StatelessWidget {
       padding: const EdgeInsets.all(2),
       child: Row(
         children: [
-          _toggleChip('Front', BodyViewSide.front),
-          _toggleChip('Back', BodyViewSide.back),
+          _toggleChip('Both', BodyDiagramViewMode.both),
+          _toggleChip('Front', BodyDiagramViewMode.front),
+          _toggleChip('Back', BodyDiagramViewMode.back),
         ],
       ),
     );
   }
 
-  Widget _toggleChip(String label, BodyViewSide side) {
-    final selected = activeView == side;
+  Widget _toggleChip(String label, BodyDiagramViewMode mode) {
+    final selected = viewMode == mode;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onChanged(side),
+        onTap: () => onChanged(mode),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           alignment: Alignment.center,
@@ -839,7 +1028,7 @@ class _ViewToggle extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: selected ? AppColors.primary : AppColors.textPrimary,
             ),
@@ -959,16 +1148,85 @@ class _MoreAreasTile extends StatelessWidget {
   }
 }
 
+class _GeneralAreaTile extends StatelessWidget {
+  const _GeneralAreaTile({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? AppColors.surface : AppColors.textPrimary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: selected ? AppColors.primary : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.accessibility_new_rounded,
+                size: 26,
+                color: selected ? AppColors.surface : _bodyMapIconColor,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Whole body / not in one place',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Fever, nausea, dizziness, tiredness…',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: selected
+                            ? AppColors.surface.withValues(alpha: 0.85)
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.check_circle : Icons.add_circle_outline,
+                size: 20,
+                color: selected ? AppColors.surface : _bodyMapIconColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ExtraAreaTile extends StatelessWidget {
   const _ExtraAreaTile({
     required this.label,
-    required this.icon,
+    required this.assetPath,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final IconData icon;
+  final String assetPath;
   final bool selected;
   final VoidCallback onTap;
 
@@ -990,9 +1248,11 @@ class _ExtraAreaTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                icon,
-                size: 22,
+              Image.asset(
+                assetPath,
+                width: 28,
+                height: 28,
+                fit: BoxFit.contain,
                 color: selected ? AppColors.surface : _bodyMapIconColor,
               ),
               const SizedBox(width: 10),
@@ -1014,17 +1274,6 @@ class _ExtraAreaTile extends StatelessWidget {
       ),
     );
   }
-}
-
-IconData _extraIconForArea(String area) {
-  if (area.contains('Elbow')) return Icons.linear_scale_rounded;
-  if (area.contains('Wrist')) return Icons.horizontal_rule_rounded;
-  if (area.contains('Hand')) return Icons.back_hand_outlined;
-  if (area.contains('Hip')) return Icons.accessibility_new_rounded;
-  if (area.contains('Knee')) return Icons.expand_more_rounded;
-  if (area.contains('Ankle')) return Icons.more_horiz_rounded;
-  if (area.contains('Foot')) return Icons.directions_walk_rounded;
-  return Icons.add_circle_outline_rounded;
 }
 
 class _SelectedAreasBar extends StatelessWidget {

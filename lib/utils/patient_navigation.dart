@@ -27,6 +27,14 @@ Future<void> navigateAfterAuth(
     return;
   }
 
+  if (user.role == UserRole.patient && !user.emailVerified) {
+    Navigator.of(context).pushReplacementNamed(
+      AppRoutes.verifyEmail,
+      arguments: VerifyEmailArguments(email: user.email),
+    );
+    return;
+  }
+
   if (user.role == UserRole.doctor && !user.isVerified) {
     Navigator.of(context).pushReplacementNamed(AppRoutes.verificationPending);
     return;

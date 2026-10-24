@@ -1,8 +1,13 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:geolocator/geolocator.dart';
 import 'package:medigo_mobile/models/doctor.dart';
 
 class LocationService {
+  static final geocoding.Geocoding _geocoding = geocoding.Geocoding();
+
+  static const Duration _positionTimeout = Duration(seconds: 8);
+  static const Duration _geocodeTimeout = Duration(seconds: 4);
+
   static Future<bool> isLocationServiceEnabled() async {
     return await Geolocator.isLocationServiceEnabled();
   }
@@ -19,9 +24,9 @@ class LocationService {
   /// Returns null if address cannot be geocoded
   static Future<Location?> getLocationFromAddress(String address) async {
     try {
-      List<geocoding.Location> locations = await geocoding.locationFromAddress(
-        address,
-      );
+      final locations = await _geocoding
+          .locationFromAddress(address)
+          .timeout(_geocodeTimeout);
       if (locations.isEmpty) return null;
 
       final geocodingLocation = locations.first;
@@ -41,8 +46,9 @@ class LocationService {
     double longitude,
   ) async {
     try {
-      List<geocoding.Placemark> placemarks = await geocoding
-          .placemarkFromCoordinates(latitude, longitude);
+      final placemarks = await _geocoding
+          .placemarkFromCoordinates(latitude, longitude)
+          .timeout(_geocodeTimeout);
       if (placemarks.isEmpty) return null;
 
       final placemark = placemarks.first;
@@ -96,13 +102,16 @@ class LocationService {
         return null;
       }
 
-      Position position = await Geolocator.getCurrentPosition(
+      // Prefer a cached fix so the UI is not blocked waiting for a fresh GPS lock.
+      Position? position = await Geolocator.getLastKnownPosition();
+      position ??= await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
+          accuracy: LocationAccuracy.medium,
+          timeLimit: _positionTimeout,
         ),
       );
 
-      // Reverse geocode to get address from coordinates
+      // Reverse geocode is best-effort; never block returning coordinates.
       final addressFromCoords = await getAddressFromCoordinates(
         position.latitude,
         position.longitude,

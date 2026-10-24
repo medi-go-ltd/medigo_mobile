@@ -1,3 +1,5 @@
+import 'package:medigo_mobile/models/review.dart';
+
 class Doctor {
   final String id;
   final String firstName;
@@ -9,6 +11,12 @@ class Doctor {
   final int reviewCount;
   final Location location;
   final int estimatedTime;
+  final String? bio;
+  final int? yearsOfExperience;
+  final String? gmcNumber;
+  final List<String> languages;
+  final String? feeIncludes;
+  final List<Review> reviews;
 
   Doctor({
     required this.id,
@@ -21,11 +29,56 @@ class Doctor {
     required this.reviewCount,
     required this.location,
     required this.estimatedTime,
+    this.bio,
+    this.yearsOfExperience,
+    this.gmcNumber,
+    this.languages = const [],
+    this.feeIncludes,
+    this.reviews = const [],
   });
 
   String get fullName => 'Dr. $firstName $lastName';
 
+  Doctor copyWith({
+    String? id,
+    String? firstName,
+    String? lastName,
+    String? specialty,
+    double? fee,
+    String? profileImageUrl,
+    double? rating,
+    int? reviewCount,
+    Location? location,
+    int? estimatedTime,
+    String? bio,
+    int? yearsOfExperience,
+    String? gmcNumber,
+    List<String>? languages,
+    String? feeIncludes,
+    List<Review>? reviews,
+  }) {
+    return Doctor(
+      id: id ?? this.id,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      specialty: specialty ?? this.specialty,
+      fee: fee ?? this.fee,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      location: location ?? this.location,
+      estimatedTime: estimatedTime ?? this.estimatedTime,
+      bio: bio ?? this.bio,
+      yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
+      gmcNumber: gmcNumber ?? this.gmcNumber,
+      languages: languages ?? this.languages,
+      feeIncludes: feeIncludes ?? this.feeIncludes,
+      reviews: reviews ?? this.reviews,
+    );
+  }
+
   factory Doctor.fromJson(Map<String, dynamic> json) {
+    final reviewsJson = json['reviews'] as List<dynamic>?;
     return Doctor(
       id: json['id'] as String,
       firstName:
@@ -43,6 +96,22 @@ class Doctor {
       location: Location.fromJson(json['location'] as Map<String, dynamic>),
       estimatedTime:
           json['estimatedTime'] as int? ?? json['estimated_time'] as int? ?? 0,
+      bio: json['bio'] as String?,
+      yearsOfExperience:
+          json['yearsOfExperience'] as int? ??
+          json['years_of_experience'] as int?,
+      gmcNumber:
+          json['gmcNumber'] as String? ?? json['gmc_number'] as String?,
+      languages: (json['languages'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      feeIncludes:
+          json['feeIncludes'] as String? ?? json['fee_includes'] as String?,
+      reviews: reviewsJson
+              ?.map((e) => Review.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
     );
   }
 
@@ -58,6 +127,12 @@ class Doctor {
       'reviewCount': reviewCount,
       'location': location.toJson(),
       'estimatedTime': estimatedTime,
+      'bio': bio,
+      'yearsOfExperience': yearsOfExperience,
+      'gmcNumber': gmcNumber,
+      'languages': languages,
+      'feeIncludes': feeIncludes,
+      'reviews': reviews.map((r) => r.toJson()).toList(),
     };
   }
 }

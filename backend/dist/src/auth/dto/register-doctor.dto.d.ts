@@ -4,6 +4,7 @@ export declare class RegisterDoctorDto {
     email: string;
     phoneNumber: string;
     password: string;
+    profileImagePath?: string;
     homeAddress: string;
     gmcNumber: string;
     specialisations: string[];
@@ -12,6 +13,7 @@ export declare class RegisterDoctorDto {
     callOutFee?: number;
     radiusKm: number;
     qualificationsFilePaths: string[];
+    professionalIndemnityInsuranceFilePath?: string;
     photoIdFilePath?: string;
     dbsConsentGiven: boolean;
 }

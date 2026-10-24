@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:medigo_mobile/features/patient/appointments/patient_appointments_screen.dart';
 import 'package:medigo_mobile/features/patient/history/patient_history_screen.dart';
 import 'package:medigo_mobile/features/patient/payments/patient_payments_screen.dart';
+import 'package:medigo_mobile/features/patient/profile/patient_doctor_profile_screen.dart';
 import 'package:medigo_mobile/models/doctor.dart';
-import 'package:medigo_mobile/routes/app_routes.dart';
+import 'package:medigo_mobile/services/profile_completion_service.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
+import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/patient_home_view_model.dart';
+import 'package:medigo_mobile/widgets/complete_profile_prompt_sheet.dart';
 import 'package:medigo_mobile/widgets/doctor_card.dart';
 import 'package:medigo_mobile/widgets/patient_home_header.dart';
 import 'package:medigo_mobile/widgets/patient_map_widget.dart';
@@ -20,13 +23,28 @@ class PatientHomeScreen extends StatefulWidget {
 
 class _PatientHomeScreenState extends State<PatientHomeScreen> {
   int _currentIndex = 0;
+  bool _profilePromptChecked = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PatientHomeViewModel>().initialize();
+      _maybeShowProfilePrompt();
     });
+  }
+
+  Future<void> _maybeShowProfilePrompt() async {
+    if (_profilePromptChecked || !mounted) return;
+    _profilePromptChecked = true;
+    // Only on the map tab, and not over booking / other flows.
+    if (_currentIndex != 0) return;
+
+    final user = context.read<AuthViewModel>().user;
+    final shouldShow =
+        await ProfileCompletionService.shouldShowPrompt(user);
+    if (!mounted || !shouldShow) return;
+    await showCompleteProfilePrompt(context);
   }
 
   @override
@@ -93,7 +111,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         routeInfo: viewModel.routeInfo,
                         userLocation: viewModel.userLocation,
                         onDismissed: viewModel.clearSelection,
-                        onBookNow: () => _startBooking(
+                        onViewProfile: () => _openDoctorProfile(
                           viewModel.selectedDoctor!,
                           isNearestDoctor: false,
                         ),
@@ -112,7 +130,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     return ElevatedButton.icon(
       onPressed: viewModel.nearestAvailableDoctor == null
           ? null
-          : () => _startBooking(
+          : () => _openDoctorProfile(
               viewModel.nearestAvailableDoctor!,
               isNearestDoctor: true,
             ),
@@ -127,12 +145,18 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     );
   }
 
-  void _startBooking(Doctor doctor, {required bool isNearestDoctor}) {
-    Navigator.of(context).pushNamed(
-      AppRoutes.patientBooking,
-      arguments: PatientBookingArguments(
-        doctor: doctor,
-        isNearestDoctor: isNearestDoctor,
+  void _openDoctorProfile(Doctor doctor, {required bool isNearestDoctor}) {
+    final viewModel = context.read<PatientHomeViewModel>();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PatientDoctorProfileScreen(
+          doctor: doctor,
+          routeInfo: viewModel.selectedDoctor?.id == doctor.id
+              ? viewModel.routeInfo
+              : null,
+          userLocation: viewModel.userLocation,
+          isNearestDoctor: isNearestDoctor,
+        ),
       ),
     );
   }

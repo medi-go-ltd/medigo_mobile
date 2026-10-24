@@ -74,7 +74,7 @@ class EarningsChartSection extends StatelessWidget {
                                 .reduce((a, b) => a > b ? a : b) *
                             1.2)
                         .clamp(10, double.infinity),
-                    barTouchData: BarTouchData(enabled: false),
+                    barTouchData: const BarTouchData(enabled: false),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(

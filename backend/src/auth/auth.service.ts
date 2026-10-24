@@ -9,17 +9,24 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDoctorDto } from './dto/register-doctor.dto';
 import { RegisterPatientDto } from './dto/register-patient.dto';
+import { SocialSignInDto } from './dto/social-sign-in.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendEmailVerificationDto } from './dto/resend-email-verification.dto';
 import { PasswordResetMailerService } from './password-reset-mailer.service';
+import { EmailVerificationMailerService } from './email-verification-mailer.service';
+import { SocialTokenVerifierService } from './social-token-verifier.service';
 import * as bcrypt from 'bcrypt';
 import { UserRole, VerificationStatus, type User } from '@prisma/client';
 import {
   expiresAtFromDuration,
+  generateEmailVerificationCode,
   generatePasswordResetToken,
   generateRefreshToken,
+  hashEmailVerificationCode,
   hashPasswordResetToken,
   hashRefreshToken,
 } from '../common/utils/token.util';
@@ -31,6 +38,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly passwordResetMailer: PasswordResetMailerService,
+    private readonly emailVerificationMailer: EmailVerificationMailerService,
+    private readonly socialTokenVerifier: SocialTokenVerifierService,
   ) {}
 
   async registerDoctor(payload: RegisterDoctorDto) {
@@ -67,14 +76,18 @@ export class AuthService {
       phoneNumber: payload.phoneNumber,
       passwordHash,
       role: UserRole.PATIENT,
+      verificationStatus: VerificationStatus.APPROVED,
+      emailVerifiedAt: null,
       patient: {
         create: {
-          dateOfBirth: new Date(payload.dateOfBirth),
+          dateOfBirth: payload.dateOfBirth
+            ? new Date(payload.dateOfBirth)
+            : null,
           gender: payload.gender,
           genderAtBirth: payload.genderAtBirth,
-          houseNumber: payload.address.houseNumber,
-          street: payload.address.street,
-          postcode: payload.address.postcode,
+          houseNumber: payload.address?.houseNumber,
+          street: payload.address?.street,
+          postcode: payload.address?.postcode,
           highBloodPressure: payload.medicalHistory?.highBloodPressure ?? false,
           diabetes: payload.medicalHistory?.diabetes ?? false,
           heartDisease: payload.medicalHistory?.heartDisease ?? false,
@@ -91,7 +104,147 @@ export class AuthService {
       },
     });
 
-    return this.issueAuthResponse(user, 'Patient registration successful');
+    await this.createAndSendEmailVerification(user.id, user.email);
+    return this.issueAuthResponse(
+      user,
+      'Registration successful. Please verify your email.',
+    );
+  }
+
+  async socialSignIn(payload: SocialSignInDto) {
+    if (payload.role !== 'patient') {
+      throw new BadRequestException('Social sign-in is only available for patients');
+    }
+
+    const claims = await this.socialTokenVerifier.verify(
+      payload.provider,
+      payload.idToken,
+      { rawNonce: payload.nonce, insecureFallbackEmail: payload.email },
+    );
+    const email = claims.email?.toLowerCase();
+    if (!email) {
+      throw new BadRequestException(
+        'Email is required for social sign-in. Try again or use email signup.',
+      );
+    }
+    if (!claims.emailVerified) {
+      throw new UnauthorizedException(
+        'Your email is not verified with this provider. Use email signup instead.',
+      );
+    }
+
+    const providerSubject = claims.sub;
+    const existingByProvider = await this.prisma.user.findFirst({
+      where: {
+        authProvider: payload.provider,
+        providerSubject,
+      },
+    });
+
+    if (existingByProvider) {
+      if (existingByProvider.role !== UserRole.PATIENT) {
+        throw new ConflictException(
+          'This social account is linked to a non-patient user',
+        );
+      }
+      const refreshed =
+        existingByProvider.emailVerifiedAt == null
+          ? await this.prisma.user.update({
+              where: { id: existingByProvider.id },
+              data: { emailVerifiedAt: new Date() },
+            })
+          : existingByProvider;
+      return this.issueAuthResponse(refreshed, 'Login successful');
+    }
+
+    const existingByEmail = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingByEmail) {
+      if (existingByEmail.role !== UserRole.PATIENT) {
+        throw new ConflictException(
+          'An account with this email already exists for a different role. Sign in with email instead.',
+        );
+      }
+      const updated = await this.prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          authProvider: payload.provider,
+          providerSubject,
+          emailVerifiedAt: existingByEmail.emailVerifiedAt ?? new Date(),
+        },
+      });
+      return this.issueAuthResponse(updated, 'Login successful');
+    }
+
+    const user = await this.createUserSafely({
+      email,
+      firstName: payload.firstName ?? claims.firstName ?? 'Patient',
+      lastName: payload.lastName ?? claims.lastName ?? '',
+      passwordHash: null,
+      role: UserRole.PATIENT,
+      authProvider: payload.provider,
+      providerSubject,
+      verificationStatus: VerificationStatus.APPROVED,
+      emailVerifiedAt: new Date(),
+      patient: {
+        create: {},
+      },
+    });
+
+    return this.issueAuthResponse(user, 'Registration successful');
+  }
+
+  async verifyEmail(payload: VerifyEmailDto) {
+    const email = payload.email.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    if (user.emailVerifiedAt) {
+      throw new BadRequestException(
+        'This email is already verified. Please sign in.',
+      );
+    }
+
+    const codeHash = hashEmailVerificationCode(payload.code);
+    const record = await this.prisma.emailVerification.findFirst({
+      where: { userId: user.id, codeHash },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      if (record) {
+        await this.prisma.emailVerification.delete({ where: { id: record.id } });
+      }
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date() },
+    });
+    await this.prisma.emailVerification.deleteMany({
+      where: { userId: user.id },
+    });
+
+    return this.issueAuthResponse(updated, 'Email verified successfully');
+  }
+
+  async resendEmailVerification(payload: ResendEmailVerificationDto) {
+    const email = payload.email.toLowerCase();
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    const message =
+      'If an account exists for this email, a new verification code has been sent.';
+
+    if (!user || user.emailVerifiedAt) {
+      return { success: true, message };
+    }
+
+    await this.createAndSendEmailVerification(user.id, user.email);
+    return { success: true, message };
   }
 
   async login(payload: LoginDto) {
@@ -99,7 +252,7 @@ export class AuthService {
       where: { email: payload.email.toLowerCase() },
     });
 
-    if (!user) {
+    if (!user || !user.passwordHash) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -213,10 +366,14 @@ export class AuthService {
     data: Parameters<PrismaService['user']['create']>[0]['data'],
   ): Promise<User> {
     try {
+      const { verificationStatus, ...rest } = data as typeof data & {
+        verificationStatus?: VerificationStatus;
+      };
       return await this.prisma.user.create({
         data: {
-          ...data,
-          verificationStatus: VerificationStatus.PENDING,
+          ...rest,
+          verificationStatus:
+            verificationStatus ?? VerificationStatus.PENDING,
         },
       });
     } catch (error) {
@@ -232,6 +389,27 @@ export class AuthService {
     }
   }
 
+  private async createAndSendEmailVerification(
+    userId: string,
+    email: string,
+  ): Promise<void> {
+    await this.prisma.emailVerification.deleteMany({ where: { userId } });
+
+    const code = generateEmailVerificationCode();
+    const expiresIn =
+      this.configService.get<string>('EMAIL_VERIFICATION_EXPIRES_IN') ?? '30m';
+
+    await this.prisma.emailVerification.create({
+      data: {
+        userId,
+        codeHash: hashEmailVerificationCode(code),
+        expiresAt: expiresAtFromDuration(expiresIn),
+      },
+    });
+
+    this.emailVerificationMailer.sendVerificationEmail(email, code);
+  }
+
   private async issueAuthResponse(user: User, message: string) {
     const accessToken = await this.issueAccessToken(
       user.id,
@@ -239,6 +417,11 @@ export class AuthService {
       user.role,
     );
     const refreshToken = await this.createRefreshSession(user.id);
+
+    const patient =
+      user.role === UserRole.PATIENT
+        ? await this.prisma.patient.findUnique({ where: { userId: user.id } })
+        : null;
 
     return {
       success: true,
@@ -251,7 +434,10 @@ export class AuthService {
         lastName: user.lastName,
         phoneNumber: user.phoneNumber,
         role: user.role.toLowerCase(),
+        gender: patient?.gender ?? null,
+        profileImageUrl: user.profileImageUrl,
         verificationStatus: user.verificationStatus.toLowerCase(),
+        emailVerified: user.emailVerifiedAt != null,
         token: accessToken,
       },
     };

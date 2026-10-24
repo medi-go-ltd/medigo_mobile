@@ -25,6 +25,12 @@ export class AuthUserDto {
   })
   verificationStatus!: string;
 
+  @ApiProperty({
+    example: false,
+    description: 'Whether the email address has been verified',
+  })
+  emailVerified!: boolean;
+
   @ApiProperty({ description: 'JWT access token' })
   token!: string;
 }

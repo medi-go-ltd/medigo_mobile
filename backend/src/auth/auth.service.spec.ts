@@ -12,6 +12,9 @@ import {
   hashRefreshToken,
 } from '../common/utils/token.util';
 import { PasswordResetMailerService } from './password-reset-mailer.service';
+import { EmailVerificationMailerService } from './email-verification-mailer.service';
+import { SocialTokenVerifierService } from './social-token-verifier.service';
+import { hashEmailVerificationCode } from '../common/utils/token.util';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {
@@ -19,8 +22,18 @@ describe('AuthService', () => {
   const prisma = {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    },
+    patient: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    emailVerification: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
     session: {
       findFirst: jest.fn(),
@@ -65,6 +78,14 @@ describe('AuthService', () => {
     sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
   };
 
+  const emailVerificationMailer = {
+    sendVerificationEmail: jest.fn(),
+  };
+
+  const socialTokenVerifier = {
+    verify: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
@@ -76,6 +97,14 @@ describe('AuthService', () => {
         {
           provide: PasswordResetMailerService,
           useValue: passwordResetMailer,
+        },
+        {
+          provide: EmailVerificationMailerService,
+          useValue: emailVerificationMailer,
+        },
+        {
+          provide: SocialTokenVerifierService,
+          useValue: socialTokenVerifier,
         },
       ],
     }).compile();
@@ -223,6 +252,113 @@ describe('AuthService', () => {
         password: 'NewSecure123!',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  describe('verifyEmail', () => {
+    const unverifiedUser = {
+      id: 'user-1',
+      email: 'patient@example.com',
+      firstName: 'Jane',
+      lastName: 'Doe',
+      phoneNumber: null,
+      profileImageUrl: null,
+      role: UserRole.PATIENT,
+      verificationStatus: VerificationStatus.APPROVED,
+      emailVerifiedAt: null,
+    };
+
+    it('rejects an already verified email without issuing a session', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        ...unverifiedUser,
+        emailVerifiedAt: new Date(),
+      });
+
+      await expect(
+        service.verifyEmail({ email: 'patient@example.com', code: '000000' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.session.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a wrong code', async () => {
+      prisma.user.findUnique.mockResolvedValue(unverifiedUser);
+      prisma.emailVerification.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.verifyEmail({ email: 'patient@example.com', code: '000000' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.session.create).not.toHaveBeenCalled();
+    });
+
+    it('marks the email verified and issues a session for a valid code', async () => {
+      prisma.user.findUnique.mockResolvedValue(unverifiedUser);
+      prisma.emailVerification.findFirst.mockResolvedValue({
+        id: 'ev-1',
+        codeHash: hashEmailVerificationCode('123456'),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      prisma.user.update.mockResolvedValue({
+        ...unverifiedUser,
+        emailVerifiedAt: new Date(),
+      });
+      prisma.emailVerification.deleteMany.mockResolvedValue({ count: 1 });
+      prisma.session.create.mockResolvedValue({});
+
+      const result = await service.verifyEmail({
+        email: 'patient@example.com',
+        code: '123456',
+      });
+
+      expect(result.user.emailVerified).toBe(true);
+      expect(result.user.token).toBe('access-token');
+    });
+  });
+
+  describe('socialSignIn', () => {
+    it('uses the email from the verified token, not the request body', async () => {
+      socialTokenVerifier.verify.mockResolvedValue({
+        sub: 'google-sub-1',
+        email: 'real@example.com',
+        emailVerified: true,
+      });
+      prisma.user.findFirst.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockImplementation(
+        ({ data }: { data: Record<string, unknown> }) =>
+          Promise.resolve({
+            id: 'user-2',
+            phoneNumber: null,
+            profileImageUrl: null,
+            verificationStatus: VerificationStatus.APPROVED,
+            ...data,
+          }),
+      );
+      prisma.session.create.mockResolvedValue({});
+
+      const result = await service.socialSignIn({
+        provider: 'google',
+        idToken: 'token',
+        role: 'patient',
+        email: 'victim@example.com',
+      });
+
+      expect(result.user.email).toBe('real@example.com');
+    });
+
+    it('rejects provider emails that are not verified', async () => {
+      socialTokenVerifier.verify.mockResolvedValue({
+        sub: 'google-sub-1',
+        email: 'real@example.com',
+        emailVerified: false,
+      });
+
+      await expect(
+        service.socialSignIn({
+          provider: 'google',
+          idToken: 'token',
+          role: 'patient',
+        }),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
   });
 
   it('logout deletes session by token hash', async () => {

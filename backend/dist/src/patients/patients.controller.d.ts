@@ -8,21 +8,24 @@ export declare class PatientsController {
         user: {
             id: string;
             email: string;
-            passwordHash: string;
+            passwordHash: string | null;
             firstName: string;
             lastName: string;
             phoneNumber: string | null;
             role: import("@prisma/client").$Enums.UserRole;
             profileImageUrl: string | null;
+            authProvider: string | null;
+            providerSubject: string | null;
             verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+            emailVerifiedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
         };
     } & {
         id: string;
-        houseNumber: string;
-        street: string;
-        postcode: string;
+        houseNumber: string | null;
+        street: string | null;
+        postcode: string | null;
         highBloodPressure: boolean;
         diabetes: boolean;
         heartDisease: boolean;
@@ -33,16 +36,16 @@ export declare class PatientsController {
         additionalNotes: string | null;
         sameGenderDoctorPreference: boolean;
         locationServicesEnabled: boolean;
-        dateOfBirth: Date;
-        gender: string;
-        genderAtBirth: string;
+        dateOfBirth: Date | null;
+        gender: string | null;
+        genderAtBirth: string | null;
         userId: string;
     }>;
     updatePreferences(user: JwtUser, body: UpdatePatientPreferencesDto): Promise<{
         id: string;
-        houseNumber: string;
-        street: string;
-        postcode: string;
+        houseNumber: string | null;
+        street: string | null;
+        postcode: string | null;
         highBloodPressure: boolean;
         diabetes: boolean;
         heartDisease: boolean;
@@ -53,9 +56,9 @@ export declare class PatientsController {
         additionalNotes: string | null;
         sameGenderDoctorPreference: boolean;
         locationServicesEnabled: boolean;
-        dateOfBirth: Date;
-        gender: string;
-        genderAtBirth: string;
+        dateOfBirth: Date | null;
+        gender: string | null;
+        genderAtBirth: string | null;
         userId: string;
     }>;
 }

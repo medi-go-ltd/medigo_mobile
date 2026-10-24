@@ -36,20 +36,26 @@ enum AppointmentStatus {
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
-  passwordHash       String
+  passwordHash       String?
   firstName          String
   lastName           String
   phoneNumber        String?
   role               UserRole           @default(PATIENT)
   profileImageUrl    String?
+  authProvider       String?
+  providerSubject    String?
   verificationStatus VerificationStatus @default(PENDING)
+  emailVerifiedAt    DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   doctor             Doctor?
   patient            Patient?
   sessions           Session[]
   passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
   documents          Document[]
+
+  @@unique([authProvider, providerSubject])
 }
 
 model Doctor {
@@ -73,12 +79,12 @@ model Patient {
   id                        String       @id @default(cuid())
   userId                     String      @unique
   user                       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth                DateTime
-  gender                     String
-  genderAtBirth              String
-  houseNumber                String
-  street                     String
-  postcode                   String
+  dateOfBirth                DateTime?
+  gender                     String?
+  genderAtBirth              String?
+  houseNumber                String?
+  street                     String?
+  postcode                   String?
   highBloodPressure          Boolean     @default(false)
   diabetes                   Boolean     @default(false)
   heartDisease               Boolean     @default(false)
@@ -137,6 +143,18 @@ model PasswordReset {
 
   @@index([userId])
   @@index([tokenHash])
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([codeHash])
 }
 
 model Document {

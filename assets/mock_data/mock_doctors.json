@@ -13,7 +13,36 @@
       "longitude": 0.20730996025344275,
       "address": "Dartford Medical Practice, 65-67 Lowfield Street, Dartford, DA1 1HP"
     },
-    "estimatedTime": 12
+    "estimatedTime": 12,
+    "bio": "Experienced paediatrician focused on calm, clear home visits for families.",
+    "yearsOfExperience": 8,
+    "gmcNumber": "7400000",
+    "languages": [
+      "English",
+      "Yoruba",
+      "Spanish"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      },
+      {
+        "name": "Amira K.",
+        "text": "Felt reassured seeing qualifications and reviews before paying.",
+        "rating": 4,
+        "date": "18 Jan 2026"
+      }
+    ]
   },
   {
     "id": "doc-002",
@@ -29,7 +58,28 @@
       "longitude": 0.28674040697526576,
       "address": "Bean Village Surgery, 4 Southfleet Rd, Bean, Dartford DA2 8AR"
     },
-    "estimatedTime": 8
+    "estimatedTime": 8,
+    "bio": "Consultant cardiologist offering rapid assessment for chest pain and heart concerns.",
+    "yearsOfExperience": 9,
+    "gmcNumber": "7400111",
+    "languages": [
+      "English"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      }
+    ]
   },
   {
     "id": "doc-003",
@@ -45,7 +95,34 @@
       "longitude": 0.26353369163199586,
       "address": "Elmdene Surgery, 273 London Rd, Stone, Greenhithe DA9 9DB"
     },
-    "estimatedTime": 15
+    "estimatedTime": 15,
+    "bio": "Dermatologist specialising in rashes, skin infections, and urgent skin reviews.",
+    "yearsOfExperience": 10,
+    "gmcNumber": "7400222",
+    "languages": [
+      "English"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      },
+      {
+        "name": "Amira K.",
+        "text": "Felt reassured seeing qualifications and reviews before paying.",
+        "rating": 4,
+        "date": "18 Jan 2026"
+      }
+    ]
   },
   {
     "id": "doc-004",
@@ -61,7 +138,29 @@
       "longitude": 0.31197242553980364,
       "address": "Swanscombe Health Centre, Southfleet Rd, Swanscombe DA10 0BF"
     },
-    "estimatedTime": 10
+    "estimatedTime": 10,
+    "bio": "Orthopaedic doctor helping with joint pain, injuries, and mobility issues at home.",
+    "yearsOfExperience": 11,
+    "gmcNumber": "7400333",
+    "languages": [
+      "English",
+      "Yoruba"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      }
+    ]
   },
   {
     "id": "doc-005",
@@ -77,7 +176,35 @@
       "longitude": 0.3406620021396617,
       "address": "Fleet Health Campus, Vale Rd, Northfleet, Gravesend DA11 8BZ"
     },
-    "estimatedTime": 6
+    "estimatedTime": 6,
+    "bio": "GP providing thorough assessments and practical treatment plans at your location.",
+    "yearsOfExperience": 12,
+    "gmcNumber": "7400444",
+    "languages": [
+      "English",
+      "Spanish"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      },
+      {
+        "name": "Amira K.",
+        "text": "Felt reassured seeing qualifications and reviews before paying.",
+        "rating": 4,
+        "date": "18 Jan 2026"
+      }
+    ]
   },
   {
     "id": "doc-006",
@@ -93,7 +220,28 @@
       "longitude": 0.37004030120681247,
       "address": "Gravesend Medical Centre, 1 New Swan Yard, Gravesend, Kent, DA12 2EN"
     },
-    "estimatedTime": 14
+    "estimatedTime": 14,
+    "bio": "Orthopaedic doctor helping with joint pain, injuries, and mobility issues at home.",
+    "yearsOfExperience": 13,
+    "gmcNumber": "7400555",
+    "languages": [
+      "English"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      }
+    ]
   },
   {
     "id": "doc-007",
@@ -109,7 +257,35 @@
       "longitude": 0.23663937682613342,
       "address": "Pilgrims Way Surgery, Pilgrims Way, Dartford DA1 1QY"
     },
-    "estimatedTime": 6
+    "estimatedTime": 6,
+    "bio": "GP providing thorough assessments and practical treatment plans at your location.",
+    "yearsOfExperience": 14,
+    "gmcNumber": "7400666",
+    "languages": [
+      "English",
+      "Yoruba"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      },
+      {
+        "name": "Amira K.",
+        "text": "Felt reassured seeing qualifications and reviews before paying.",
+        "rating": 4,
+        "date": "18 Jan 2026"
+      }
+    ]
   },
   {
     "id": "doc-008",
@@ -125,7 +301,27 @@
       "longitude": 0.2799107228559753,
       "address": "Ivy Bower Surgery, 7 Ivy Bower Cl, Greenhithe DA9 9NF"
     },
-    "estimatedTime": 6
+    "estimatedTime": 6,
+    "bio": "Dental clinician available for urgent tooth pain and oral health assessments.",
+    "yearsOfExperience": 15,
+    "gmcNumber": "7400777",
+    "languages": [
+      "English"
+    ],
+    "feeIncludes": "Home visit consultation, clinical assessment, and a written summary for your records.",
+    "reviews": [
+      {
+        "name": "Priya S.",
+        "text": "Arrived quickly and explained everything clearly. Worth every pound.",
+        "rating": 5,
+        "date": "12 Mar 2026"
+      },
+      {
+        "name": "James T.",
+        "text": "Professional, kind, and took time to answer questions before we booked.",
+        "rating": 5,
+        "date": "2 Feb 2026"
+      }
+    ]
   }
 ]
-

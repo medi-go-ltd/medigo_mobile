@@ -6,13 +6,16 @@ export declare class AdminController {
     users(): import("@prisma/client").Prisma.PrismaPromise<{
         id: string;
         email: string;
-        passwordHash: string;
+        passwordHash: string | null;
         firstName: string;
         lastName: string;
         phoneNumber: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         profileImageUrl: string | null;
+        authProvider: string | null;
+        providerSubject: string | null;
         verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+        emailVerifiedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }[]>;
@@ -41,13 +44,16 @@ export declare class AdminController {
     verification(userId: string, body: UpdateVerificationDto): import("@prisma/client").Prisma.Prisma__UserClient<{
         id: string;
         email: string;
-        passwordHash: string;
+        passwordHash: string | null;
         firstName: string;
         lastName: string;
         phoneNumber: string | null;
         role: import("@prisma/client").$Enums.UserRole;
         profileImageUrl: string | null;
+        authProvider: string | null;
+        providerSubject: string | null;
         verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+        emailVerifiedAt: Date | null;
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, import("@prisma/client").Prisma.PrismaClientOptions>;

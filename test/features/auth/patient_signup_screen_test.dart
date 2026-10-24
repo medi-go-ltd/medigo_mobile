@@ -20,23 +20,22 @@ void main() {
   }
 
   group('PatientSignupScreen', () {
-    testWidgets('shows personal information step', (tester) async {
+    testWidgets('shows short signup form without document uploads', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildWidget());
       await tester.pumpAndSettle();
 
-      expect(find.text('Personal Information'), findsOneWidget);
-      expect(find.text('First Name'), findsWidgets);
-      expect(find.textContaining('Profile Picture'), findsOneWidget);
-      expect(find.text('Continue'), findsOneWidget);
-    });
-
-    testWidgets('shows progress steps', (tester) async {
-      await tester.pumpWidget(buildWidget());
-      await tester.pumpAndSettle();
-
-      expect(find.text('Personal'), findsOneWidget);
-      expect(find.text('Medical'), findsOneWidget);
-      expect(find.text('Preferences'), findsOneWidget);
+      expect(find.text('Create patient account'), findsOneWidget);
+      expect(find.textContaining('First Name'), findsWidgets);
+      expect(find.textContaining('Last Name'), findsWidgets);
+      expect(find.textContaining('Email'), findsWidgets);
+      expect(find.text('Create Account'), findsOneWidget);
+      expect(find.text('Continue with Google'), findsOneWidget);
+      expect(find.textContaining('Profile Picture'), findsNothing);
+      expect(find.textContaining('proof of address'), findsNothing);
+      expect(find.text('Medical'), findsNothing);
+      expect(find.text('Preferences'), findsNothing);
     });
   });
 }

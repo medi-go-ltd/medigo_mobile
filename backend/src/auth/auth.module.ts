@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
 import { PasswordResetMailerService } from './password-reset-mailer.service';
+import { EmailVerificationMailerService } from './email-verification-mailer.service';
+import { SocialTokenVerifierService } from './social-token-verifier.service';
 
 @Module({
   imports: [
@@ -23,7 +25,13 @@ import { PasswordResetMailerService } from './password-reset-mailer.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PasswordResetMailerService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    PasswordResetMailerService,
+    EmailVerificationMailerService,
+    SocialTokenVerifierService,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

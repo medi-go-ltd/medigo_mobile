@@ -5,7 +5,10 @@ import 'package:medigo_mobile/models/login_request.dart';
 import 'package:medigo_mobile/models/login_response.dart';
 import 'package:medigo_mobile/models/message_response.dart';
 import 'package:medigo_mobile/models/patient_registration_request.dart';
+import 'package:medigo_mobile/models/resend_email_verification_request.dart';
 import 'package:medigo_mobile/models/reset_password_request.dart';
+import 'package:medigo_mobile/models/social_sign_in_request.dart';
+import 'package:medigo_mobile/models/verify_email_request.dart';
 import 'package:medigo_mobile/repositories/i_auth_repository.dart';
 import 'package:medigo_mobile/services/api_service.dart';
 import 'package:medigo_mobile/utils/app_exception.dart';
@@ -82,6 +85,39 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
+  Future<LoginResponse> signInWithSocial(SocialSignInRequest request) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/social',
+        body: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+        return LoginResponse.fromJson(jsonData);
+      } else {
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw ApiException.fromResponse(
+          statusCode: response.statusCode,
+          responseData: errorData,
+        );
+      }
+    } on ApiException {
+      rethrow;
+    } on FormatException catch (e) {
+      throw ApiException(
+        'Invalid response format from server',
+        originalError: e,
+      );
+    } catch (e) {
+      if (e is AppException) {
+        rethrow;
+      }
+      throw NetworkException.fromError(e);
+    }
+  }
+
+  @override
   Future<LoginResponse> login(LoginRequest request) async {
     try {
       final response = await _apiService.post('/login', body: request.toJson());
@@ -119,6 +155,46 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<MessageResponse> resetPassword(ResetPasswordRequest request) async {
     return _postMessage('/auth/reset-password', request.toJson());
+  }
+
+  @override
+  Future<LoginResponse> verifyEmail(VerifyEmailRequest request) async {
+    try {
+      final response = await _apiService.post(
+        '/auth/verify-email',
+        body: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+        return LoginResponse.fromJson(jsonData);
+      } else {
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw ApiException.fromResponse(
+          statusCode: response.statusCode,
+          responseData: errorData,
+        );
+      }
+    } on ApiException {
+      rethrow;
+    } on FormatException catch (e) {
+      throw ApiException(
+        'Invalid response format from server',
+        originalError: e,
+      );
+    } catch (e) {
+      if (e is AppException) {
+        rethrow;
+      }
+      throw NetworkException.fromError(e);
+    }
+  }
+
+  @override
+  Future<MessageResponse> resendEmailVerification(
+    ResendEmailVerificationRequest request,
+  ) async {
+    return _postMessage('/auth/resend-email-verification', request.toJson());
   }
 
   Future<MessageResponse> _postMessage(

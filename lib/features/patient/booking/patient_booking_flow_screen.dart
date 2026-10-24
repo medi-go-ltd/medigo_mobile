@@ -5,6 +5,7 @@ import 'package:medigo_mobile/routes/app_routes.dart';
 import 'package:medigo_mobile/theme/app_theme.dart';
 import 'package:medigo_mobile/view_models/auth_view_model.dart';
 import 'package:medigo_mobile/view_models/patient_booking_view_model.dart';
+import 'package:medigo_mobile/view_models/patient_home_view_model.dart';
 import 'package:medigo_mobile/widgets/body_diagram_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -31,8 +32,22 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   final _otherNameController = TextEditingController();
   TriageAnswers _triage = const TriageAnswers();
   final Set<String> _bodyAreas = {};
+  final Set<String> _symptoms = {};
+  final _detailsController = TextEditingController();
   IssueSeverity? _issueSeverity;
   PaymentMethodType _paymentMethod = PaymentMethodType.debitCard;
+
+  static const _symptomOptions = [
+    'Pain',
+    'Fever',
+    'Nausea / vomiting',
+    'Dizziness',
+    'Swelling',
+    'Rash',
+    'Bleeding',
+    'Breathing trouble',
+    'Cough',
+  ];
 
   @override
   void initState() {
@@ -49,7 +64,19 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   void dispose() {
     _pageController.dispose();
     _otherNameController.dispose();
+    _detailsController.dispose();
     super.dispose();
+  }
+
+  String get _issueDescription {
+    final parts = <String>[];
+    if (_symptoms.isNotEmpty) {
+      final ordered = _symptomOptions.where(_symptoms.contains);
+      parts.add('Symptoms: ${ordered.join(', ')}');
+    }
+    final details = _detailsController.text.trim();
+    if (details.isNotEmpty) parts.add(details);
+    return parts.join('. ');
   }
 
   void _unfocus() => FocusManager.instance.primaryFocus?.unfocus();
@@ -93,7 +120,7 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
       triage: _triage,
       bodyAreas: _bodyAreas.toList(),
       issueSeverity: _issueSeverity,
-      description: _issueSeverity?.label ?? '',
+      description: _issueDescription,
       paymentMethod: _paymentMethod,
     );
   }
@@ -101,12 +128,22 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
   Future<void> _confirm() async {
     _unfocus();
     _syncDraft();
+    final homeVm = context.read<PatientHomeViewModel>();
+    final location = homeVm.userLocation;
+    final patientLocation = location == null
+        ? 'Location not shared'
+        : location.address?.isNotEmpty == true
+            ? location.address!
+            : '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}';
+
     final vm = context.read<PatientBookingViewModel>();
     final booking = await vm.confirmBooking(
       patientName: _bookingFor == BookingFor.myself
           ? 'You'
           : _otherNameController.text.trim(),
-      patientLocation: 'Your registered address',
+      patientLocation: patientLocation,
+      patientLat: location?.latitude,
+      patientLng: location?.longitude,
     );
     if (!mounted || booking == null) return;
     Navigator.of(context).pushReplacementNamed(
@@ -386,6 +423,72 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
             onChanged: (severity) =>
                 setState(() => _issueSeverity = severity),
           ),
+          const SizedBox(height: 28),
+          Text(
+            'What are you experiencing?',
+            style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Optional, but it helps the doctor prepare',
+            style: AppTypography.bodySecondary.copyWith(fontSize: 13),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _symptomOptions.map((symptom) {
+              final selected = _symptoms.contains(symptom);
+              return FilterChip(
+                label: Text(symptom),
+                selected: selected,
+                showCheckmark: false,
+                onSelected: (value) => setState(() {
+                  if (value) {
+                    _symptoms.add(symptom);
+                  } else {
+                    _symptoms.remove(symptom);
+                  }
+                }),
+                labelStyle: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? AppColors.surface : AppColors.textPrimary,
+                ),
+                backgroundColor: AppColors.surface,
+                selectedColor: AppColors.primary,
+                side: BorderSide(
+                  color: selected ? AppColors.primary : AppColors.border,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _detailsController,
+            minLines: 3,
+            maxLines: 5,
+            maxLength: 500,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText:
+                  'Describe what\'s happening, e.g. sharp pain under my right ribs after eating',
+              hintMaxLines: 2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.6,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       onNext: () {
@@ -400,6 +503,18 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
         if (_issueSeverity == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please select issue severity')),
+          );
+          return;
+        }
+        final onlyGeneral = _bodyAreas.length == 1 &&
+            _bodyAreas.contains(BodyDiagramWidget.generalArea);
+        if (onlyGeneral && _issueDescription.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Pick a symptom or add a short description so the doctor knows what\'s wrong',
+              ),
+            ),
           );
           return;
         }
@@ -447,6 +562,12 @@ class _PatientBookingFlowScreenState extends State<PatientBookingFlowScreen> {
           Icons.favorite_border,
           'Severity',
           _issueSeverity!.label,
+        ),
+      if (_issueDescription.isNotEmpty)
+        _ConfirmDetail(
+          Icons.notes_outlined,
+          'Details',
+          _issueDescription,
         ),
       _ConfirmDetail(
         Icons.credit_card_outlined,
@@ -791,6 +912,23 @@ class _ConfirmDoctorCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(doctor.specialty, style: AppTypography.bodySecondary),
+                const SizedBox(height: 6),
+                Text(
+                  '${doctor.rating.toStringAsFixed(1)} ★ · Fee £${doctor.fee.toInt()}',
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                if (doctor.location.address != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    doctor.location.address!,
+                    style: AppTypography.bodySecondary.copyWith(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),
