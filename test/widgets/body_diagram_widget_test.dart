@@ -43,6 +43,28 @@ void main() {
     expect(selected, {'Chest', 'Right Arm'});
   });
 
+  testWidgets('whole body tile toggles the general area', (tester) async {
+    final selected = <String>{};
+
+    await tester.pumpWidget(
+      _wrap(
+        BodyDiagramWidget(
+          selectedAreas: selected,
+          onAreaToggled: (area) {
+            if (!selected.remove(area)) selected.add(area);
+          },
+        ),
+      ),
+    );
+
+    final tile = find.text('Whole body / not in one place');
+    await tester.ensureVisible(tile);
+    await tester.tap(tile);
+    await tester.pump();
+
+    expect(selected, {BodyDiagramWidget.generalArea});
+  });
+
   testWidgets('tapping selected chip deselects area', (tester) async {
     final selected = <String>{'Chest'};
 
@@ -89,8 +111,8 @@ void main() {
       find.byKey(const ValueKey('body-map-front-panel')),
     );
     final size = diagramBox.size;
-    // Upper skull on the front figure.
-    final localTap = Offset(size.width * 0.50, size.height * 0.06);
+    // Face centre on the 3D front figure.
+    final localTap = Offset(size.width * 0.50, size.height * 0.085);
     await tester.tapAt(diagramBox.localToGlobal(localTap));
     await tester.pump();
 
@@ -114,7 +136,7 @@ void main() {
       find.byKey(const ValueKey('body-map-front-panel')),
     );
     final size = diagramBox.size;
-    final localTap = Offset(size.width * 0.50, size.height * 0.09);
+    final localTap = Offset(size.width * 0.50, size.height * 0.084);
     await tester.tapAt(diagramBox.localToGlobal(localTap));
     await tester.pump();
 
@@ -140,8 +162,8 @@ void main() {
       find.byKey(const ValueKey('body-map-front-panel')),
     );
     final size = diagramBox.size;
-    // Mid-shin on the patient's left leg (image right).
-    final localTap = Offset(size.width * 0.64, size.height * 0.80);
+    // Shin on the patient's left leg (image right), below the knee hit zone.
+    final localTap = Offset(size.width * 0.59, size.height * 0.78);
     await tester.tapAt(diagramBox.localToGlobal(localTap));
     await tester.pump();
 
@@ -163,6 +185,55 @@ void main() {
 
     expect(find.text('Left Elbow'), findsOneWidget);
     expect(find.text('Choose a more specific body area'), findsOneWidget);
+  });
+
+  testWidgets('zoom in control increases body map scale', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const BodyDiagramWidget(onAreaToggled: _noop),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-zoom-in')), findsWidgets);
+
+    await tester.tap(find.byKey(const ValueKey('body-zoom-in')).first);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-zoom-out')), findsWidgets);
+    expect(find.byKey(const ValueKey('body-zoom-reset')), findsWidgets);
+  });
+
+  testWidgets('view toggle defaults to both and can focus one side', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const BodyDiagramWidget(onAreaToggled: _noop),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-map-front-panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('body-map-back-panel')), findsOneWidget);
+
+    await tester.tap(find.text('Front'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-map-front-panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('body-map-back-panel')), findsNothing);
+
+    await tester.tap(find.text('Back'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-map-front-panel')), findsNothing);
+    expect(find.byKey(const ValueKey('body-map-back-panel')), findsOneWidget);
+
+    await tester.tap(find.text('Both'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('body-map-front-panel')), findsOneWidget);
+    expect(find.byKey(const ValueKey('body-map-back-panel')), findsOneWidget);
   });
 }
 

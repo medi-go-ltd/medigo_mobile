@@ -12,6 +12,7 @@ class DoctorCard extends StatelessWidget {
     this.userLocation,
     required this.onDismissed,
     this.onBookNow,
+    this.onViewProfile,
   });
 
   final Doctor doctor;
@@ -19,6 +20,7 @@ class DoctorCard extends StatelessWidget {
   final Location? userLocation;
   final VoidCallback onDismissed;
   final VoidCallback? onBookNow;
+  final VoidCallback? onViewProfile;
 
   String get _distanceLabel {
     if (routeInfo != null) return routeInfo!.distance;
@@ -32,7 +34,7 @@ class DoctorCard extends StatelessWidget {
 
   String get _arrivalLabel {
     if (routeInfo != null) return routeInfo!.duration;
-    final min = doctor.estimatedTime;
+    final min = doctor.estimatedTime < 1 ? 1 : doctor.estimatedTime;
     final low = (min - 3).clamp(1, min);
     return '$low–${min + 3} mins';
   }
@@ -85,7 +87,7 @@ class DoctorCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: onBookNow,
+                    onPressed: onViewProfile ?? onBookNow,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.surface,
@@ -99,7 +101,7 @@ class DoctorCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Book Now',
+                          'View profile',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

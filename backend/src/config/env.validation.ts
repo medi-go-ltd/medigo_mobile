@@ -40,4 +40,16 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   UPLOAD_BASE_URL?: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_IDS?: string;
+
+  @IsOptional()
+  @IsString()
+  APPLE_CLIENT_IDS?: string;
+
+  @IsOptional()
+  @IsString()
+  ALLOW_INSECURE_SOCIAL_TOKENS?: string;
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medigo_mobile/config/app_config.dart';
 import 'package:medigo_mobile/models/login_request.dart';
+import 'package:medigo_mobile/models/social_sign_in_request.dart';
 import 'package:medigo_mobile/models/user.dart';
 import 'package:medigo_mobile/models/user_role.dart';
 import 'package:medigo_mobile/repositories/auth_repository.dart';
@@ -56,6 +57,40 @@ class LoginViewModel extends ChangeNotifier {
       );
 
       final response = await _authRepository.login(request);
+
+      final token = response.user.token ?? '';
+      if (_authViewModel != null && token.isNotEmpty) {
+        await _authViewModel.login(response.user, token);
+      }
+
+      _user = response.user;
+      _status = LoginStatus.success;
+      _errorMessage = null;
+      notifyListeners();
+
+      return true;
+    } on AppException catch (e) {
+      _status = LoginStatus.error;
+      _errorMessage = e.message;
+      _user = null;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _status = LoginStatus.error;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _user = null;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> signInWithSocial(SocialSignInRequest request) async {
+    try {
+      _status = LoginStatus.loading;
+      _errorMessage = null;
+      notifyListeners();
+
+      final response = await _authRepository.signInWithSocial(request);
 
       final token = response.user.token ?? '';
       if (_authViewModel != null && token.isNotEmpty) {

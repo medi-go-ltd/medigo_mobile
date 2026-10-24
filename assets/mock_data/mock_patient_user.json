@@ -8,6 +8,7 @@
     "role": "patient",
     "gender": "Female",
     "verificationStatus": "approved",
+    "emailVerified": true,
     "profileImageUrl": null,
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC9.patient.token",
     "createdAt": "2024-01-01T00:00:00Z",

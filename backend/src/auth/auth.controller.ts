@@ -12,6 +12,9 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { SocialSignInDto } from './dto/social-sign-in.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { ResendEmailVerificationDto } from './dto/resend-email-verification.dto';
 import {
   AuthResponseDto,
   MessageResponseDto,
@@ -43,6 +46,13 @@ export class AuthController {
     return this.authService.login(body);
   }
 
+  @Post('auth/social')
+  @ApiOkResponse({ type: AuthResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Invalid social token' })
+  socialSignIn(@Body() body: SocialSignInDto) {
+    return this.authService.socialSignIn(body);
+  }
+
   @Post('auth/refresh')
   @ApiOkResponse({ type: AuthResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
@@ -66,5 +76,17 @@ export class AuthController {
   @ApiOkResponse({ type: MessageResponseDto })
   resetPassword(@Body() body: ResetPasswordDto) {
     return this.authService.resetPassword(body);
+  }
+
+  @Post('auth/verify-email')
+  @ApiOkResponse({ type: AuthResponseDto })
+  verifyEmail(@Body() body: VerifyEmailDto) {
+    return this.authService.verifyEmail(body);
+  }
+
+  @Post('auth/resend-email-verification')
+  @ApiOkResponse({ type: MessageResponseDto })
+  resendEmailVerification(@Body() body: ResendEmailVerificationDto) {
+    return this.authService.resendEmailVerification(body);
   }
 }

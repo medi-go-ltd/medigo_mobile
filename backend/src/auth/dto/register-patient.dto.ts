@@ -10,14 +10,17 @@ import {
 import { Type } from 'class-transformer';
 
 class AddressDto {
+  @IsOptional()
   @IsString()
-  houseNumber!: string;
+  houseNumber?: string;
 
+  @IsOptional()
   @IsString()
-  street!: string;
+  street?: string;
 
+  @IsOptional()
   @IsString()
-  postcode!: string;
+  postcode?: string;
 }
 
 class MedicalHistoryDto {
@@ -71,28 +74,33 @@ export class RegisterPatientDto {
   @IsString()
   lastName!: string;
 
-  @IsDateString()
-  dateOfBirth!: string;
-
-  @IsString()
-  gender!: string;
-
-  @IsString()
-  genderAtBirth!: string;
-
   @IsEmail()
   email!: string;
 
   @IsString()
-  phoneNumber!: string;
-
-  @ValidateNested()
-  @Type(() => AddressDto)
-  address!: AddressDto;
-
-  @IsString()
   @MinLength(8)
   password!: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  genderAtBirth?: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
 
   @IsOptional()
   @ValidateNested()

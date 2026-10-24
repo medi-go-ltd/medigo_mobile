@@ -14,6 +14,7 @@ class User {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final VerificationStatus verificationStatus;
+  final bool emailVerified;
 
   User({
     required this.id,
@@ -28,6 +29,7 @@ class User {
     this.createdAt,
     this.updatedAt,
     this.verificationStatus = VerificationStatus.pending,
+    this.emailVerified = true,
   });
 
   String get fullName => '$firstName $lastName';
@@ -62,6 +64,10 @@ class User {
         json['verificationStatus'] as String? ??
             json['verification_status'] as String?,
       ),
+      emailVerified:
+          json['emailVerified'] as bool? ??
+          json['email_verified'] as bool? ??
+          true,
     );
   }
 
@@ -81,6 +87,7 @@ class User {
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'verificationStatus': verificationStatus.name,
+      'emailVerified': emailVerified,
     };
   }
 
@@ -109,6 +116,7 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
     VerificationStatus? verificationStatus,
+    bool? emailVerified,
   }) {
     return User(
       id: id ?? this.id,
@@ -123,6 +131,7 @@ class User {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       verificationStatus: verificationStatus ?? this.verificationStatus,
+      emailVerified: emailVerified ?? this.emailVerified,
     );
   }
 }
