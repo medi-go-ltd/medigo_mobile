@@ -6,6 +6,7 @@ export declare class AuthUserDto {
     phoneNumber: string | null;
     role: string;
     verificationStatus: string;
+    emailVerified: boolean;
     token: string;
 }
 export declare class AuthResponseDto {

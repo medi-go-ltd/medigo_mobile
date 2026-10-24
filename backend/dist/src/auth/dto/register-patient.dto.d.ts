@@ -1,7 +1,7 @@
 declare class AddressDto {
-    houseNumber: string;
-    street: string;
-    postcode: string;
+    houseNumber?: string;
+    street?: string;
+    postcode?: string;
 }
 declare class MedicalHistoryDto {
     highBloodPressure?: boolean;
@@ -20,13 +20,13 @@ declare class PreferencesDto {
 export declare class RegisterPatientDto {
     firstName: string;
     lastName: string;
-    dateOfBirth: string;
-    gender: string;
-    genderAtBirth: string;
     email: string;
-    phoneNumber: string;
-    address: AddressDto;
     password: string;
+    dateOfBirth?: string;
+    gender?: string;
+    genderAtBirth?: string;
+    phoneNumber?: string;
+    address?: AddressDto;
     medicalHistory?: MedicalHistoryDto;
     preferences?: PreferencesDto;
 }

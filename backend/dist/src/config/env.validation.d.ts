@@ -11,4 +11,7 @@ export declare class EnvironmentVariables {
     THROTTLE_LIMIT: number;
     UPLOAD_BUCKET?: string;
     UPLOAD_BASE_URL?: string;
+    GOOGLE_CLIENT_IDS?: string;
+    APPLE_CLIENT_IDS?: string;
+    ALLOW_INSECURE_SOCIAL_TOKENS?: string;
 }

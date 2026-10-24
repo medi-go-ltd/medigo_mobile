@@ -20,6 +20,11 @@ const register_doctor_dto_1 = require("./dto/register-doctor.dto");
 const register_patient_dto_1 = require("./dto/register-patient.dto");
 const login_dto_1 = require("./dto/login.dto");
 const refresh_token_dto_1 = require("./dto/refresh-token.dto");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
+const reset_password_dto_1 = require("./dto/reset-password.dto");
+const social_sign_in_dto_1 = require("./dto/social-sign-in.dto");
+const verify_email_dto_1 = require("./dto/verify-email.dto");
+const resend_email_verification_dto_1 = require("./dto/resend-email-verification.dto");
 const auth_response_dto_1 = require("../common/dto/auth-response.dto");
 let AuthController = class AuthController {
     authService;
@@ -35,11 +40,26 @@ let AuthController = class AuthController {
     login(body) {
         return this.authService.login(body);
     }
+    socialSignIn(body) {
+        return this.authService.socialSignIn(body);
+    }
     refresh(body) {
         return this.authService.refresh(body);
     }
     logout(body) {
         return this.authService.logout(body);
+    }
+    forgotPassword(body) {
+        return this.authService.forgotPassword(body);
+    }
+    resetPassword(body) {
+        return this.authService.resetPassword(body);
+    }
+    verifyEmail(body) {
+        return this.authService.verifyEmail(body);
+    }
+    resendEmailVerification(body) {
+        return this.authService.resendEmailVerification(body);
     }
 };
 exports.AuthController = AuthController;
@@ -71,6 +91,15 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.Post)('auth/social'),
+    (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.AuthResponseDto }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Invalid social token' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [social_sign_in_dto_1.SocialSignInDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "socialSignIn", null);
+__decorate([
     (0, common_1.Post)('auth/refresh'),
     (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.AuthResponseDto }),
     (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Invalid or expired refresh token' }),
@@ -87,6 +116,38 @@ __decorate([
     __metadata("design:paramtypes", [refresh_token_dto_1.RefreshTokenDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.Post)('auth/forgot-password'),
+    (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.MessageResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('auth/reset-password'),
+    (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.MessageResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Post)('auth/verify-email'),
+    (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.AuthResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [verify_email_dto_1.VerifyEmailDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "verifyEmail", null);
+__decorate([
+    (0, common_1.Post)('auth/resend-email-verification'),
+    (0, swagger_1.ApiOkResponse)({ type: auth_response_dto_1.MessageResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [resend_email_verification_dto_1.ResendEmailVerificationDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resendEmailVerification", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)(),

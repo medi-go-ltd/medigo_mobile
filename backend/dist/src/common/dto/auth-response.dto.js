@@ -19,6 +19,7 @@ class AuthUserDto {
     phoneNumber;
     role;
     verificationStatus;
+    emailVerified;
     token;
 }
 exports.AuthUserDto = AuthUserDto;
@@ -53,6 +54,13 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], AuthUserDto.prototype, "verificationStatus", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: false,
+        description: 'Whether the email address has been verified',
+    }),
+    __metadata("design:type", Boolean)
+], AuthUserDto.prototype, "emailVerified", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'JWT access token' }),
     __metadata("design:type", String)

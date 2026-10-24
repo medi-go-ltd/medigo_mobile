@@ -17,6 +17,7 @@ class RegisterDoctorDto {
     email;
     phoneNumber;
     password;
+    profileImagePath;
     homeAddress;
     gmcNumber;
     specialisations;
@@ -25,6 +26,7 @@ class RegisterDoctorDto {
     callOutFee;
     radiusKm;
     qualificationsFilePaths;
+    professionalIndemnityInsuranceFilePath;
     photoIdFilePath;
     dbsConsentGiven;
 }
@@ -50,6 +52,11 @@ __decorate([
     (0, class_validator_1.MinLength)(8),
     __metadata("design:type", String)
 ], RegisterDoctorDto.prototype, "password", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDoctorDto.prototype, "profileImagePath", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -89,6 +96,11 @@ __decorate([
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], RegisterDoctorDto.prototype, "qualificationsFilePaths", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDoctorDto.prototype, "professionalIndemnityInsuranceFilePath", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),

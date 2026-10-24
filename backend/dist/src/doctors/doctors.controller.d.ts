@@ -8,13 +8,16 @@ export declare class DoctorsController {
         user: {
             id: string;
             email: string;
-            passwordHash: string;
+            passwordHash: string | null;
             firstName: string;
             lastName: string;
             phoneNumber: string | null;
             role: import("@prisma/client").$Enums.UserRole;
             profileImageUrl: string | null;
+            authProvider: string | null;
+            providerSubject: string | null;
             verificationStatus: import("@prisma/client").$Enums.VerificationStatus;
+            emailVerifiedAt: Date | null;
             createdAt: Date;
             updatedAt: Date;
         };

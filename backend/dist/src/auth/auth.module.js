@@ -14,6 +14,9 @@ const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const passport_1 = require("@nestjs/passport");
 const jwt_strategy_1 = require("./jwt.strategy");
+const password_reset_mailer_service_1 = require("./password-reset-mailer.service");
+const email_verification_mailer_service_1 = require("./email-verification-mailer.service");
+const social_token_verifier_service_1 = require("./social-token-verifier.service");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -34,7 +37,13 @@ exports.AuthModule = AuthModule = __decorate([
             }),
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
+        providers: [
+            auth_service_1.AuthService,
+            jwt_strategy_1.JwtStrategy,
+            password_reset_mailer_service_1.PasswordResetMailerService,
+            email_verification_mailer_service_1.EmailVerificationMailerService,
+            social_token_verifier_service_1.SocialTokenVerifierService,
+        ],
         exports: [auth_service_1.AuthService],
     })
 ], AuthModule);
